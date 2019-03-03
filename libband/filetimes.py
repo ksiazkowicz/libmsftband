@@ -12,14 +12,12 @@ WINDOWS_TICKS_TO_POSIX_EPOCH = EPOCH_DIFF * WINDOWS_TICKS  # 116444736000000000.
 
 def get_time(filetime):
     """Convert windows filetime winticks to python datetime.datetime."""
-    winticks = filetime #struct.unpack('<Q', filetime)[0]
-    microsecs = (winticks - WINDOWS_TICKS_TO_POSIX_EPOCH) / WINDOWS_TICKS
+    microsecs = (filetime - WINDOWS_TICKS_TO_POSIX_EPOCH) / WINDOWS_TICKS
     return datetime.datetime.fromtimestamp(int(microsecs))
 
-def convert_back(timestamp_string):
-    """Convert a timestamp in Y=M=D H:M:S.f format into a windows filetime."""
-    dt = datetime.datetime.strptime(timestamp_string, '%Y-%m-%d %H:%M:%S.%f')
-    posix_secs = int(time.mktime(dt.timetuple()))
+def datetime_to_filetime(timestamp):
+    """Converts Python datetime object to Windows filetime"""
+    posix_secs = int(time.mktime(timestamp.timetuple()))
     winticks = (posix_secs + int(EPOCH_DIFF)) * WINDOWS_TICKS
     return winticks
 

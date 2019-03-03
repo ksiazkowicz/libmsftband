@@ -13,8 +13,7 @@ from .commands import SERIAL_NUMBER_REQUEST, PUSH_NOTIFICATION, \
                       START_STRIP_SYNC_START, READ_ME_TILE_IMAGE, \
                       WRITE_ME_TILE_IMAGE_WITH_ID, SUBSCRIBE, \
                       GET_STATISTICS_WORKOUT, GET_STATISTICS_SLEEP, \
-                      GET_STATISTICS_RUN, GET_STATISTICS_GUIDED_WORKOUT
-from .filetimes import convert_back, get_time
+from .filetimes import datetime_to_filetime, get_time
 from .tiles import CALLS
 from .socket import BandSocket
 from . import PUSH_SERVICE_PORT, NOTIFICATION_TYPES, layouts
@@ -402,10 +401,7 @@ class BandDevice:
         notification = flags + guid.bytes_le
         notification += struct.pack("H", len(caller)*2)
         notification += struct.pack("L", call_id)
-        timestamp_string = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-        timestamp = convert_back(timestamp_string)
-
-        notification += struct.pack("<Qxx", timestamp)
+        notification += struct.pack("<Qxx", datetime_to_filetime(datetime.now()))
         notification += serialize_text(caller)
 
         self.cargo.send(
@@ -431,10 +427,7 @@ class BandDevice:
         notification = flags + guid.bytes_le
         notification += struct.pack("H", len(title)*2)
         notification += struct.pack("H", len(text)*2)
-        timestamp_string = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-        timestamp = convert_back(timestamp_string)
-
-        notification += struct.pack("<Qxx", timestamp)
+        notification += struct.pack("<Qxx", datetime_to_filetime(datetime.now()))
         notification += serialize_text(title+text)
 
         self.cargo.send(
