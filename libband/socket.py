@@ -52,6 +52,9 @@ class BandSocket:
             except bluetooth.btcommon.BluetoothError as error:
                 self.device.wrapper.print("Connecting because %s" % error)
                 self.connect()
+            except OSError as error:
+                # assume user actually wanted to disconnect
+                pass
         return result
 
     def send(self, packet):
@@ -61,6 +64,10 @@ class BandSocket:
                 self.socket.send(packet)
                 break
             except bluetooth.btcommon.BluetoothError as error:
+                self.device.wrapper.print("Connecting because %s" % error)
+                self.connect()
+            except OSError as error:
+                # I guess we lost connection because of malformed packet
                 self.device.wrapper.print("Connecting because %s" % error)
                 self.connect()
 
@@ -89,3 +96,30 @@ class BandSocket:
         # we're done
         return success, results
 
+    def make_command_packet(
+        self, command, arguments_buffer_size, data_stage_size, arguments,
+        prepend_size):
+        result = bytes([])
+        if prepend_size:
+            result += bytes([8 + arguments_buffer_size])
+        result += struct.pack("<H", 12025)
+        result += struct.pack("<H", command)
+        result += struct.pack("<I", data_stage_size)
+        if arguments:
+            result += arguments
+        return result
+
+    def cargo_read(self, command, response_size):
+        command_packet = self.make_command_packet(
+            command, 
+            4, 
+            response_size, 
+            struct.pack("<I", response_size), 
+            True)
+        return self.send_for_result(command_packet)
+
+    def cargo_write_with_data(self, command, data):
+        packet = self.make_command_packet(command, 0, len(data), None, True)
+        self.send(packet)
+        return self.send_for_result(data)
+    

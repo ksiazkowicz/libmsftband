@@ -17,7 +17,22 @@ FACILITIES = {
 }
 
 
-def make_command(facility, is_tx, index, prefix=b"\x08"):
+def make_command(facility, is_tx, index):
+    # TX bit, 2 bytes
+    tx_bit = b"\x01\x00" if is_tx else b"\x00\x00"
+    tx_int = struct.unpack('<H', tx_bit)[0]
+
+    # category, for example Notifications, encoded as 2 bytes
+    facility += (2 - len(facility)) * b"\x00"
+    facility_int = struct.unpack('<H', facility)[0]
+
+    # make command
+    command = facility_int << 8 | tx_int << 7 | index
+
+    return command
+
+
+def make_command_legacy(facility, is_tx, index, prefix=b"\x08"):
     # TX bit, 2 bytes
     tx_bit = b"\x01\x00" if is_tx else b"\x00\x00"
     tx_int = struct.unpack('<H', tx_bit)[0]
@@ -31,43 +46,43 @@ def make_command(facility, is_tx, index, prefix=b"\x08"):
 
     return prefix + b"\xf9\x2e" + struct.pack("<H", command)
 
+# LibraryTime
+SET_DEVICE_TIME = make_command(FACILITIES["LibraryTime"], False, 1)
+GET_DEVICE_TIME = make_command(FACILITIES["LibraryTime"], True, 2)
+
 # ModuleThemeColor
-SET_THEME_COLOR = make_command(
-    FACILITIES["ModuleThemeColor"], False, 0) + struct.pack("<I", 24)
+SET_THEME_COLOR = make_command(FACILITIES["ModuleThemeColor"], False, 0)
 
 # Fireball UI
-READ_ME_TILE_IMAGE = make_command(
+READ_ME_TILE_IMAGE = make_command_legacy(
     FACILITIES["ModuleFireballUI"], True, 14, b"\x0c") + struct.pack("<I", 0)
-WRITE_ME_TILE_IMAGE_WITH_ID = make_command(
+WRITE_ME_TILE_IMAGE_WITH_ID = make_command_legacy(
     FACILITIES["ModuleFireballUI"], False, 17, b"\x0c") + struct.pack("<I", 0)
 
 # Installed Apps
-START_STRIP_SYNC_START = make_command(
+START_STRIP_SYNC_START = make_command_legacy(
     FACILITIES["ModuleInstalledAppList"], False, 2) + struct.pack("<I", 0)
-START_STRIP_SYNC_END = make_command(
+START_STRIP_SYNC_END = make_command_legacy(
     FACILITIES["ModuleInstalledAppList"], False, 3) + struct.pack("<I", 0)
-GET_TILES_NO_IMAGES = make_command(
+GET_TILES_NO_IMAGES = make_command_legacy(
     FACILITIES["ModuleInstalledAppList"], True, 18) + struct.pack("<I", 1324)
 
 # Cargo Notification
-PUSH_NOTIFICATION = make_command(
+PUSH_NOTIFICATION = make_command_legacy(
     FACILITIES["CargoNotification"], False, 0)
 
 # Library Configuration
-SERIAL_NUMBER_REQUEST = make_command(
-    FACILITIES["LibraryConfiguration"], True, 8) + struct.pack("<I", 12)
+SERIAL_NUMBER_REQUEST = make_command(FACILITIES["LibraryConfiguration"], True, 8)
 
 # Library Remote Subscription
-SUBSCRIBE = make_command(FACILITIES["LibraryRemoteSubscription"], False, 0, b"\x0d")
+SUBSCRIBE = make_command_legacy(FACILITIES["LibraryRemoteSubscription"], False, 0, b"\x0d")
 
 # ModuleProfile
-PROFILE_GET_DATA_APP = make_command(
-    FACILITIES["ModuleProfile"], True, 6, b"\x0c") + 2*struct.pack("<I", 128)
-PROFILE_SET_DATA_APP = make_command(
-    FACILITIES["ModuleProfile"], True, 7, b"\x0c") + 2*struct.pack("<I", 128)
-PROFILE_GET_DATA_FW = make_command(
+PROFILE_GET_DATA_APP = make_command(FACILITIES["ModuleProfile"], True, 6)
+PROFILE_SET_DATA_APP = make_command(FACILITIES["ModuleProfile"], True, 7)
+PROFILE_GET_DATA_FW = make_command_legacy(
     FACILITIES["ModuleProfile"], True, 8, b"\x0c") + 2*struct.pack("<I", 128)
-PROFILE_SET_DATA_FW = make_command(
+PROFILE_SET_DATA_FW = make_command_legacy(
     FACILITIES["ModuleProfile"], True, 9, b"\x0c") + 2*struct.pack("<I", 128)
 
 # ModuleOobe

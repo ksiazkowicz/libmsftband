@@ -11,8 +11,7 @@ from .commands import SERIAL_NUMBER_REQUEST, PUSH_NOTIFICATION, \
                       GET_TILES_NO_IMAGES, PROFILE_GET_DATA_APP, \
                       SET_THEME_COLOR, START_STRIP_SYNC_END, \
                       START_STRIP_SYNC_START, READ_ME_TILE_IMAGE, \
-                      WRITE_ME_TILE_IMAGE_WITH_ID, SUBSCRIBE, \
-                      GET_STATISTICS_WORKOUT, GET_STATISTICS_SLEEP, \
+                      WRITE_ME_TILE_IMAGE_WITH_ID, SUBSCRIBE
 from .filetimes import datetime_to_filetime, get_time
 from .tiles import CALLS
 from .socket import BandSocket
@@ -175,116 +174,6 @@ class BandDevice:
         command = SUBSCRIBE + b"\x00"*4 + struct.pack("L", subscription_type) + struct.pack("L", 0) # b"\x00"
         result = self.cargo.send_for_result(command)
 
-    def format_time_sleep(self, timesleep):
-        hours = float(timesleep)/float(3600000)
-        hours_int = int(hours)
-        minutes = int((hours - hours_int)*60)
-        return "%d:%02d" % (hours_int, minutes)
-
-    def deserialize_time(self, band_time):
-        if band_time <= 2650467743999990000:
-            return get_time(band_time)
-        return get_time(2650467743999990000)
-
-    def get_workout_statistics(self):
-        result, metrics = self.cargo.send_for_result(
-            GET_STATISTICS_WORKOUT + struct.pack("I", 38))
-
-        if not result:
-            self.wrapper.print("Error occurred")
-            return
-
-        data = b"".join(metrics)
-
-        timestamp = self.deserialize_time(struct.unpack("Q", data[:8])[0])
-        version = struct.unpack("H", data[8:10])[0]
-        duration = struct.unpack("L", data[10:14])[0]
-        calories_burned = struct.unpack("L", data[14:18])[0]
-        avg_heartrate = struct.unpack("L", data[18:22])[0]
-        max_heartrate = struct.unpack("L", data[22:26])[0]
-        end_time = self.deserialize_time(struct.unpack("Q", data[26:34])[0])
-        feeling = struct.unpack("L", data[34:38])[0]
-
-        self.wrapper.send("Stats::Workout", {
-            "timestamp": timestamp,
-            "version": version,
-            "duration": self.format_time_sleep(duration),
-            "calories_burned": calories_burned,
-            "avg_heartrate": avg_heartrate,
-            "max_heartrate": max_heartrate,
-            "start_time": end_time - timedelta(milliseconds=duration),
-            "end_time": end_time,
-            "feeling": feeling,
-        })
-
-    def get_guided_workout_statistics(self):
-        result, metrics = self.cargo.send_for_result(
-            GET_STATISTICS_GUIDED_WORKOUT + struct.pack("I", 38))
-
-        if not result:
-            self.wrapper.print("Error occurred")
-            return
-
-        data = b"".join(metrics)
-
-        timestamp = self.deserialize_time(struct.unpack("Q", data[:8])[0])
-        version = struct.unpack("H", data[8:10])[0]
-        duration = struct.unpack("L", data[10:14])[0]
-        calories_burned = struct.unpack("L", data[14:18])[0]
-        avg_heartrate = struct.unpack("L", data[18:22])[0]
-        max_heartrate = struct.unpack("L", data[22:26])[0]
-        end_time = self.deserialize_time(struct.unpack("Q", data[26:34])[0])
-        rounds_completed = struct.unpack("L", data[34:38])[0]
-
-        self.wrapper.send("Stats::GuidedWorkout", {
-            "timestamp": timestamp,
-            "version": version,
-            "duration": self.format_time_sleep(duration),
-            "calories_burned": calories_burned,
-            "avg_heartrate": avg_heartrate,
-            "max_heartrate": max_heartrate,
-            "start_time": end_time - timedelta(milliseconds=duration),
-            "end_time": end_time,
-            "rounds_completed": rounds_completed,
-        })
-
-    def get_sleep_metrics(self):
-        result, metrics = self.cargo.send_for_result(
-            GET_STATISTICS_SLEEP + struct.pack("I", 54))
-
-        if not result:
-            self.wrapper.print("Error occurred")
-            return
-
-        data = b"".join(metrics)
-
-        timestamp = self.deserialize_time(struct.unpack("Q", data[:8])[0])
-        version = struct.unpack("H", data[8:10])[0]
-        duration = struct.unpack("L", data[10:14])[0]
-        times_woke_up = struct.unpack("L", data[14:18])[0]
-        time_awake = struct.unpack("L", data[18:22])[0]
-        time_asleep = struct.unpack("L", data[22:26])[0]
-        calories_burned = struct.unpack("L", data[26:30])[0]
-        resting_heart_rate = struct.unpack("L", data[30:34])[0]
-        end_time = self.deserialize_time(struct.unpack("Q", data[38:46])[0])
-        time_to_fall_asleep = struct.unpack("L", data[46:50])[0]
-        feeling = struct.unpack("L", data[50:54])[0]
-
-        self.wrapper.send("Stats::Sleep", {
-            "timestamp": timestamp,
-            "version": version,
-            "duration": self.format_time_sleep(duration),
-            "times_woke_up": times_woke_up,
-            "time_awake": self.format_time_sleep(time_awake),
-            "time_asleep": self.format_time_sleep(time_asleep),
-            "calories_burned": calories_burned,
-            "resting_heart_rate": resting_heart_rate,
-            "start_time": end_time - timedelta(milliseconds=duration),
-            "end_time": end_time,
-            "time_to_fall_asleep": self.format_time_sleep(time_to_fall_asleep),
-            "feeling": feeling,
-        })
-
     def sync(self):
         for service in self.services.values():
             self.wrapper.print("%s" % service, end='')
@@ -293,21 +182,6 @@ class BandDevice:
             except:
                 result = False
             self.wrapper.print("          [%s]" % ("OK" if result else "FAIL"))
-
-        # get metrics
-        try:
-            self.get_sleep_metrics()
-        except:
-            pass
-        try:
-            self.get_workout_statistics()
-        except:
-            pass
-        try:
-            self.get_guided_workout_statistics()
-        except:
-            # we get bullshit if there was no workout
-            pass
 
         self.wrapper.print("Sync finished")
 
@@ -325,9 +199,8 @@ class BandDevice:
         Base, Highlight, Lowlight, SecondaryText, HighContrast, Muted
         """
         self.cargo.send_for_result(START_STRIP_SYNC_START)
-        self.cargo.send(SET_THEME_COLOR)
         colors = struct.pack("I"*6, *[int(x) for x in colors])
-        self.cargo.send_for_result(colors)
+        self.cargo.cargo_write_with_data(SET_THEME_COLOR, colors)
         self.cargo.send_for_result(START_STRIP_SYNC_END)
 
     def get_tiles(self):
@@ -338,7 +211,7 @@ class BandDevice:
     def get_serial_number(self):
         if not self.serial_number:
             # ask nicely for serial number
-            result, number = self.cargo.send_for_result(SERIAL_NUMBER_REQUEST)
+            result, number = self.cargo.cargo_read(SERIAL_NUMBER_REQUEST, 12)
             if result:
                 self.serial_number = number[0].decode("utf-8")
         return self.serial_number
