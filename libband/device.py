@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 
 from .helpers import serialize_text, bytes_to_text
 from .commands import SERIAL_NUMBER_REQUEST, PUSH_NOTIFICATION, \
-                      GET_TILES_NO_IMAGES, PROFILE_GET_DATA_APP, \
+                      GET_TILES_NO_IMAGES, \
                       SET_THEME_COLOR, START_STRIP_SYNC_END, \
                       START_STRIP_SYNC_START, READ_ME_TILE_IMAGE, \
                       WRITE_ME_TILE_IMAGE_WITH_ID, SUBSCRIBE
@@ -215,20 +215,6 @@ class BandDevice:
             if result:
                 self.serial_number = number[0].decode("utf-8")
         return self.serial_number
-
-    def get_device_info(self):
-        result, info = self.cargo.send_for_result(PROFILE_GET_DATA_APP)
-        if not result:
-            return
-        info = info[0]
-
-        self.band_name = bytes_to_text(info[41:73])
-        self.band_language = bytes_to_text(info[73:85])
-
-        return {
-            "name": self.band_name,
-            "language": self.band_language
-        }
 
     def request_tiles(self):
         result, tiles = self.cargo.send_for_result(GET_TILES_NO_IMAGES)
