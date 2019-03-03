@@ -1,0 +1,4 @@
+pybluez
+unidecode==1.0.23
+requests==2.21.0
+geocoder==1.38.1
