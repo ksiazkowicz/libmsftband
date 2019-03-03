@@ -6,6 +6,7 @@ import json
 import threading
 from datetime import datetime, timedelta
 
+from .parser import MsftBandParser
 from .helpers import serialize_text, bytes_to_text
 from .commands import SERIAL_NUMBER_REQUEST, PUSH_NOTIFICATION, \
                       GET_TILES_NO_IMAGES, \
