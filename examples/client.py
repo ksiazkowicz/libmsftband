@@ -6,6 +6,7 @@ from libband.apps.time import TimeService
 from libband.apps.phone import PhoneService
 from libband.apps.metrics import MetricsService
 from libband.apps.profile import ProfileService
+from libband.apps.calendar import CalendarService
 
 
 class ExampleClient:
@@ -29,6 +30,7 @@ class ExampleClient:
             metrics_service = MetricsService(self.device)
             phone_service = PhoneService(self.device)
             profile_service = ProfileService(self.device)
+            calendar_service = CalendarService(self.device)
 
             self.services = {
                 "TimeService": time_service,
@@ -36,6 +38,7 @@ class ExampleClient:
                 "MetricsApp": metrics_service,
                 "PhoneApp": phone_service,
                 "ProfileApp": profile_service,
+                "CalendarApp": calendar_service,
             }
         self.device.services = self.services
         self.device.connect()
