@@ -118,8 +118,20 @@ class BandSocket:
             True)
         return self.send_for_result(command_packet)
 
-    def cargo_write_with_data(self, command, data):
-        packet = self.make_command_packet(command, 0, len(data), None, True)
+    def cargo_write(self, command, arguments):
+        packet = self.make_command_packet(
+            command, 
+            len(arguments) if arguments else 0, 
+            0, arguments, True)
+        return self.send_for_result(packet)
+
+    def cargo_write_with_data(self, command, data, arguments=None):
+        packet = self.make_command_packet(
+            command, 
+            len(arguments) if arguments else 0, 
+            len(data) if data else 0, 
+            arguments, 
+            True)
         self.send(packet)
         return self.send_for_result(data)
     

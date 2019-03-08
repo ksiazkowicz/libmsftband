@@ -6,15 +6,15 @@ import json
 import threading
 from datetime import datetime, timedelta
 
+from .notifications import NotificationTypes, GenericClearTileNotification
 from .parser import MsftBandParser
 from .helpers import serialize_text, bytes_to_text
-from .commands import SERIAL_NUMBER_REQUEST, PUSH_NOTIFICATION, \
+from .commands import SERIAL_NUMBER_REQUEST, CARGO_NOTIFICATION, \
                       GET_TILES_NO_IMAGES, \
                       SET_THEME_COLOR, START_STRIP_SYNC_END, \
                       START_STRIP_SYNC_START, READ_ME_TILE_IMAGE, \
                       WRITE_ME_TILE_IMAGE_WITH_ID, SUBSCRIBE
 from .filetimes import datetime_to_filetime, get_time
-from .tiles import CALLS
 from .socket import BandSocket
 from . import PUSH_SERVICE_PORT, NOTIFICATION_TYPES, layouts
 
@@ -187,11 +187,7 @@ class BandDevice:
         self.wrapper.print("Sync finished")
 
     def clear_tile(self, guid):
-        notification = NOTIFICATION_TYPES["GenericClearTile"]
-        notification += guid.bytes_le
-        self.cargo.send(
-            PUSH_NOTIFICATION + struct.pack("<i", len(notification)))
-        self.cargo.send_for_result(notification)
+        self.send_notification(GenericClearTileNotification(guid))
 
     def set_theme(self, colors):
         """
@@ -247,52 +243,9 @@ class BandDevice:
             begin += 88
         self.tiles = tile_list
 
-    def call_notification(self, call_id, caller, guid=None,
-                          flags=NOTIFICATION_TYPES["IncomingCall"]):
-        if not guid:
-            return
-        if not isinstance(guid, uuid.UUID):
-            guid = uuid.UUID(guid)
-        if isinstance(flags, int):
-            flags = struct.pack("H", flags)
-
-        caller = caller[:20]
-
-        notification = flags + guid.bytes_le
-        notification += struct.pack("H", len(caller)*2)
-        notification += struct.pack("L", call_id)
-        notification += struct.pack("<Qxx", datetime_to_filetime(datetime.now()))
-        notification += serialize_text(caller)
-
-        self.cargo.send(
-            PUSH_NOTIFICATION + struct.pack("<i", len(notification)))
-        self.wrapper.print(binascii.hexlify(notification))
-
-        self.cargo.send_for_result(notification)
-
-    def send_notification(self, title, text, guid=None,
-                          flags=NOTIFICATION_TYPES["Messaging"]):
-        if not guid:
-            return
-
-        if not isinstance(guid, uuid.UUID):
-            guid = uuid.UUID(guid)
-
-        if isinstance(flags, int):
-            flags = struct.pack("H", flags)
-
-        title = title[:20]
-        text = text[:160]
-
-        notification = flags + guid.bytes_le
-        notification += struct.pack("H", len(title)*2)
-        notification += struct.pack("H", len(text)*2)
-        notification += struct.pack("<Qxx", datetime_to_filetime(datetime.now()))
-        notification += serialize_text(title+text)
-
-        self.cargo.send(
-            PUSH_NOTIFICATION + struct.pack("<i", len(notification)))
-        self.cargo.send_for_result(notification)
+    def send_notification(self, notification):
+        self.cargo.cargo_write_with_data(
+            CARGO_NOTIFICATION, notification.serialize())
 
     def response_result(self, response):
         error_code = struct.unpack("<I", response[2:6])[0]

@@ -1,3 +1,6 @@
+from libband.notifications import GenericClearTileNotification
+
+
 class App:
     band = None
     app_name = "App"
@@ -16,3 +19,6 @@ class App:
         if self.guid and guid == self.guid:
             return message
         return False
+
+    def clear_tile(self):
+        self.band.send_notification(GenericClearTileNotification(self.guid))

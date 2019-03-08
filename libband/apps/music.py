@@ -2,7 +2,7 @@ import struct
 import uuid
 from .app import App
 from libband import NOTIFICATION_TYPES, layouts
-from libband.commands import PUSH_NOTIFICATION, FACILITIES, make_command
+from libband.commands import PUSH_NOTIFICATION, FACILITIES
 from libband.tiles import MUSIC_CONTROL
 
 
