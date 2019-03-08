@@ -2,39 +2,17 @@ from __future__ import print_function
 import struct
 import binascii
 import uuid
-import json
 import threading
-from datetime import datetime, timedelta
 
 from .notifications import NotificationTypes, GenericClearTileNotification
 from .parser import MsftBandParser
-from .helpers import serialize_text, bytes_to_text
 from .commands import SERIAL_NUMBER_REQUEST, CARGO_NOTIFICATION, \
                       GET_TILES_NO_IMAGES, \
                       SET_THEME_COLOR, START_STRIP_SYNC_END, \
                       START_STRIP_SYNC_START, READ_ME_TILE_IMAGE, \
                       WRITE_ME_TILE_IMAGE_WITH_ID, SUBSCRIBE
-from .filetimes import datetime_to_filetime, get_time
 from .socket import BandSocket
-from . import PUSH_SERVICE_PORT, NOTIFICATION_TYPES, layouts
-
-
-def decode_color(color):
-    return {
-        "r": color >> 16 & 255,
-        "g": color >> 8 & 255,
-        "b": color & 255
-    }
-
-
-def cuint32_to_hex(color):
-    return "#{0:02x}{1:02x}{2:02x}".format(color >> 16 & 255, 
-                                           color >> 8 & 255, 
-                                           color & 255)
-
-
-def encode_color(alpha, r, g, b):
-    return (alpha << 24 | r << 16 | g << 8 | b)
+from . import PUSH_SERVICE_PORT, layouts
 
 
 class DummyWrapper:
@@ -91,7 +69,7 @@ class BandDevice:
         opcode = struct.unpack("I", result[6:10])[0]
         guid = uuid.UUID(bytes_le=result[10:26])
         command = result[26:44]
-        tile_name = bytes_to_text(result[44:84])
+        tile_name = MsftBandParser.bytes_to_text(result[44:84])
 
         message = {
             "opcode": opcode,
@@ -229,7 +207,7 @@ class BandDevice:
             icon = tile_data[begin+16:begin+16+12]
 
             # get tile name
-            name = bytes_to_text(tile_data[begin+28:begin+80])
+            name = MsftBandParser.bytes_to_text(tile_data[begin+28:begin+80])
 
             # append tile to list
             tile_list.append({

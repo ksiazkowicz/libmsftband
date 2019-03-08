@@ -8,6 +8,24 @@ MAX_TIME = 2650467743999990000
 
 class MsftBandParser:
     @staticmethod
+    def cuint32_to_hex(color):
+        return "#{0:02x}{1:02x}{2:02x}".format(color >> 16 & 255, 
+                                               color >> 8 & 255, 
+                                               color & 255)
+    
+    @staticmethod
+    def encode_color(alpha, r, g, b):
+        return (alpha << 24 | r << 16 | g << 8 | b)
+
+    @staticmethod
+    def decode_color(color):
+        return {
+            "r": color >> 16 & 255,
+            "g": color >> 8 & 255,
+            "b": color & 255
+        }
+
+    @staticmethod
     def deserialize_time(filetime):
         if filetime > WINDOWS_TICKS_TO_POSIX_EPOCH and filetime <= MAX_TIME:
             return get_time(filetime)
