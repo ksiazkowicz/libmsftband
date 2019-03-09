@@ -72,9 +72,15 @@ class BandDevice:
         # print(self.cargo.cargo_read(GET_ME_TILE_IMAGE_ID, 4))
         byte_count = 310 * 102 * 2
         result, data = self.cargo.cargo_read(READ_ME_TILE_IMAGE, byte_count)
-        f = open('band.bin', 'wb')
-        f.write(b''.join(data))
-        f.close()
+        pixel_data = b''.join(data)
+        return pixel_data
+
+    def set_me_tile_image(self, pixel_data, image_id):
+        result, data = self.cargo.cargo_write_with_data(
+            WRITE_ME_TILE_IMAGE_WITH_ID,
+            pixel_data,
+            struct.pack("<I", image_id))
+        return result, data
 
     def navigate_to_screen(self, screen):
         return self.cargo.cargo_write_with_data(

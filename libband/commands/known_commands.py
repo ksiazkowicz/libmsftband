@@ -7,7 +7,6 @@ FACILITIES = {
     "CargoNotification": b"\xcc",
     "ModuleInstalledAppList": b"\xd4",
     "LibraryRemoteSubscription": b"\x8f",
-    "ModuleFireballUI": b'\xC3',
 }
 
 
@@ -20,8 +19,8 @@ SET_THEME_COLOR = make_command(Facility.ModuleThemeColor, False, 0)
 
 # Fireball UI
 READ_ME_TILE_IMAGE = make_command(Facility.ModuleFireballUI, True, 14)
-WRITE_ME_TILE_IMAGE_WITH_ID = make_command_legacy(
-    FACILITIES["ModuleFireballUI"], False, 17, b"\x0c") + struct.pack("<I", 0)
+WRITE_ME_TILE_IMAGE_WITH_ID = make_command(
+    Facility.ModuleFireballUI, False, 17)
 NAVIGATE_TO_SCREEN = make_command(Facility.ModuleFireballUI, False, 0)
 
 # Installed Apps
