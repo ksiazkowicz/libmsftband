@@ -73,21 +73,30 @@ class BandSocket:
 
     def send_for_result(self, packet, buffer_size=BUFFER_SIZE):
         results = []
-        success = True
+        success = False
 
         # send packet
         self.send(packet)
 
         while True:
-            self.socket.settimeout(5.0)
+            self.socket.settimeout(6.0)
             result = self.receive(BUFFER_SIZE)
 
+            # break when we get empty response 
+            # (because we forgot to break on error? no clue)
+            if not result:
+                break
+
             # check if we got final result
-            if result[0:2] == b'\xfe\xa6':
-                error_code = struct.unpack("<I", result[2:6])[0]
+            if result[-6:-4] == b'\xfe\xa6':
+                error_code = struct.unpack("<I", result[-4:])[0]
                 if error_code:
                     self.device.wrapper.print("Error: %s" % error_code)
                 success = not error_code
+
+                if len(result) > 6:
+                    result = result[:-6]
+                    results.append(result)
                 break
 
             # nope, more data
@@ -118,7 +127,7 @@ class BandSocket:
             True)
         return self.send_for_result(command_packet)
 
-    def cargo_write(self, command, arguments):
+    def cargo_write(self, command, arguments=None):
         packet = self.make_command_packet(
             command, 
             len(arguments) if arguments else 0, 
