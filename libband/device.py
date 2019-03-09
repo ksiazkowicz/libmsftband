@@ -7,7 +7,7 @@ import threading
 from .notifications import NotificationTypes, GenericClearTileNotification
 from .parser import MsftBandParser
 from .commands import SERIAL_NUMBER_REQUEST, CARGO_NOTIFICATION, \
-                      GET_TILES_NO_IMAGES, \
+                      GET_TILES_NO_IMAGES, CORE_WHO_AM_I, \
                       SET_THEME_COLOR, START_STRIP_SYNC_END, \
                       START_STRIP_SYNC_START, READ_ME_TILE_IMAGE, \
                       WRITE_ME_TILE_IMAGE_WITH_ID, SUBSCRIBE
@@ -55,6 +55,9 @@ class BandDevice:
     def disconnect(self):
         self.push.disconnect()
         self.cargo.disconnect()
+
+    def who_am_i(self):
+        return self.cargo.cargo_read(CORE_WHO_AM_I, 1)
 
     def process_push(self, guid, command, message):
         for service in self.services.values():
