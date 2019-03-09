@@ -44,9 +44,9 @@ SUBSCRIBE = make_command_legacy(FACILITIES["LibraryRemoteSubscription"], False, 
 
 # ModuleProfile
 PROFILE_GET_DATA_APP = make_command(Facility.ModuleProfile, True, 6)
-PROFILE_SET_DATA_APP = make_command(Facility.ModuleProfile, True, 7)
+PROFILE_SET_DATA_APP = make_command(Facility.ModuleProfile, False, 7)
 PROFILE_GET_DATA_FW = make_command(Facility.ModuleProfile, True, 8)
-PROFILE_SET_DATA_FW = make_command(Facility.ModuleProfile, True, 9)
+PROFILE_SET_DATA_FW = make_command(Facility.ModuleProfile, False, 9)
 
 # ModuleSystemSettings
 GET_ME_TILE_IMAGE_ID = make_command(Facility.ModuleSystemSettings, True, 18)
