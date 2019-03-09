@@ -1,6 +1,7 @@
 import bluetooth
 import time
 import struct
+from libband.status import decode_status
 from . import CARGO_SERVICE_PORT, TIMEOUT, BUFFER_SIZE
 
 
@@ -87,12 +88,12 @@ class BandSocket:
             if not result:
                 break
 
-            # check if we got final result
+            # check if we got status bits
             if result[-6:-4] == b'\xfe\xa6':
-                error_code = struct.unpack("<I", result[-4:])[0]
-                if error_code:
-                    self.device.wrapper.print("Error: %s" % error_code)
-                success = not error_code
+                status = decode_status(struct.unpack("<I", result[-4:])[0])
+                success = not status.get('is_error', False)
+                if not success:
+                    self.device.wrapper.print("Error: %s" % status)
 
                 if len(result) > 6:
                     result = result[:-6]
