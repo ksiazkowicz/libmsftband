@@ -10,7 +10,9 @@ from .commands import SERIAL_NUMBER_REQUEST, CARGO_NOTIFICATION, \
                       GET_TILES_NO_IMAGES, CORE_WHO_AM_I, \
                       SET_THEME_COLOR, START_STRIP_SYNC_END, \
                       START_STRIP_SYNC_START, READ_ME_TILE_IMAGE, \
-                      WRITE_ME_TILE_IMAGE_WITH_ID, SUBSCRIBE
+                      WRITE_ME_TILE_IMAGE_WITH_ID, SUBSCRIBE, \
+                      CARGO_SYSTEM_SETTINGS_OOBE_COMPLETED_GET, \
+                      NAVIGATE_TO_SCREEN, GET_ME_TILE_IMAGE_ID
 from .socket import BandSocket
 from . import PUSH_SERVICE_PORT, layouts
 
@@ -58,6 +60,18 @@ class BandDevice:
 
     def who_am_i(self):
         return self.cargo.cargo_read(CORE_WHO_AM_I, 1)
+
+    def check_if_oobe_completed(self):
+        result, data = self.cargo.cargo_read(
+            CARGO_SYSTEM_SETTINGS_OOBE_COMPLETED_GET, 4)
+        if data:
+            return struct.unpack("<I", data[0])[0] != 0
+        return False
+
+
+    def navigate_to_screen(self, screen):
+        return self.cargo.cargo_write_with_data(
+            NAVIGATE_TO_SCREEN, struct.pack("<H", screen))
 
     def process_push(self, guid, command, message):
         for service in self.services.values():
