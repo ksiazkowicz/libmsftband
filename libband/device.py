@@ -1,4 +1,5 @@
 from __future__ import print_function
+from enum import IntEnum
 import struct
 import binascii
 import uuid
@@ -29,11 +30,24 @@ class DummyWrapper:
         atexit.register(func)
 
 
+class BandType(IntEnum):
+    """
+    MSFT Band device types
+    
+    Cargo - MSFT Band 1
+    Envoy - MSFT Band 2
+    """
+    Unknown = 0
+    Cargo = 1
+    Envoy = 2
+
+
 class BandDevice:
     address = ""
     cargo = None
     push = None
     tiles = None
+    band_type = BandType.Cargo  # TODO: actually detect this from Device
     band_language = None
     band_name = None
     serial_number = None
@@ -68,9 +82,26 @@ class BandDevice:
             return struct.unpack("<I", data[0])[0] != 0
         return False
 
+    def get_me_tile_image_id(self):
+        result, data = self.cargo.cargo_read(GET_ME_TILE_IMAGE_ID, 4)
+        if data:
+            return data[0]
+        return 0
+
     def get_me_tile_image(self):
-        # print(self.cargo.cargo_read(GET_ME_TILE_IMAGE_ID, 4))
-        byte_count = 310 * 102 * 2
+        """
+        Sends READ_ME_TILE_IMAGE command to device and returns a bgr565
+        byte array with Me tile image
+        """
+        # calculate byte count based on device type
+        if self.band_type == BandType.Cargo:
+            byte_count = 310 * 102 * 2
+        elif self.band_type == BandType.Envoy:
+            byte_count = 310 * 128 * 2
+        else:
+            byte_count = 0
+
+        # read Me Tile image
         result, data = self.cargo.cargo_read(READ_ME_TILE_IMAGE, byte_count)
         pixel_data = b''.join(data)
         return pixel_data
@@ -83,6 +114,10 @@ class BandDevice:
         return result, data
 
     def navigate_to_screen(self, screen):
+        """
+        Tells the device to navigate to a given screen.
+        AFAIK works only with OOBE screens in OOBE mode
+        """
         return self.cargo.cargo_write_with_data(
             NAVIGATE_TO_SCREEN, struct.pack("<H", screen))
 
@@ -254,9 +289,3 @@ class BandDevice:
     def send_notification(self, notification):
         self.cargo.cargo_write_with_data(
             CARGO_NOTIFICATION, notification.serialize())
-
-    def response_result(self, response):
-        error_code = struct.unpack("<I", response[2:6])[0]
-        if error_code:
-            self.wrapper.print("Error: %s" % error_code)
-        return not error_code

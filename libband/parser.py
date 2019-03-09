@@ -1,5 +1,6 @@
 import struct
 import sys
+from PIL import Image
 from unidecode import unidecode
 from libband.filetimes import get_time, WINDOWS_TICKS_TO_POSIX_EPOCH
 
@@ -64,3 +65,31 @@ class MsftBandParser:
         """Converts given bytes (latin-1 char + padding)*length to text"""
         content = struct.unpack((int(len(input)/2))*"sx", input)
         return "".join([x.decode("latin-1") for x in content]).rstrip("\x00")
+
+    @staticmethod
+    def bgr565_to_image(size, image):
+        """
+        Converts bgr565 image from Band to PIL Image object
+        """
+        return Image.frombytes('RGB', size, image, 'raw', 'BGR;16')
+    
+    @staticmethod
+    def image_to_bgr565(image):
+        """
+        Converts PIL Image object to bgr565 image
+
+        If you're asking why I'm not using Image.tobytes, it's because
+        it pretends that it doesn't know how to convert RGB image
+        to bgr565.
+
+        FFS, get off those pills PIL developers
+        """
+        width, height = image.size
+        pixel_array = []
+        for y in range(0, height):
+            for x in range(0, width):
+                r, g, b = image.getpixel((x, y))
+                color = b >> 3 | (g & 252) << 3 | (r & 248) << 8
+                pixel_array.append(color)
+        return struct.pack('H' * (width * height), *pixel_array)
+
