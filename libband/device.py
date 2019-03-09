@@ -68,6 +68,13 @@ class BandDevice:
             return struct.unpack("<I", data[0])[0] != 0
         return False
 
+    def get_me_tile_image(self):
+        # print(self.cargo.cargo_read(GET_ME_TILE_IMAGE_ID, 4))
+        byte_count = 310 * 102 * 2
+        result, data = self.cargo.cargo_read(READ_ME_TILE_IMAGE, byte_count)
+        f = open('band.bin', 'wb')
+        f.write(b''.join(data))
+        f.close()
 
     def navigate_to_screen(self, screen):
         return self.cargo.cargo_write_with_data(
