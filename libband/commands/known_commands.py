@@ -19,10 +19,10 @@ GET_DEVICE_TIME = make_command(Facility.LibraryTime, True, 2)
 SET_THEME_COLOR = make_command(Facility.ModuleThemeColor, False, 0)
 
 # Fireball UI
-READ_ME_TILE_IMAGE = make_command_legacy(
-    FACILITIES["ModuleFireballUI"], True, 14, b"\x0c") + struct.pack("<I", 0)
+READ_ME_TILE_IMAGE = make_command(Facility.ModuleFireballUI, True, 14)
 WRITE_ME_TILE_IMAGE_WITH_ID = make_command_legacy(
     FACILITIES["ModuleFireballUI"], False, 17, b"\x0c") + struct.pack("<I", 0)
+NAVIGATE_TO_SCREEN = make_command(Facility.ModuleFireballUI, False, 0)
 
 # Installed Apps
 START_STRIP_SYNC_START = make_command_legacy(
@@ -48,6 +48,13 @@ PROFILE_GET_DATA_APP = make_command(Facility.ModuleProfile, True, 6)
 PROFILE_SET_DATA_APP = make_command(Facility.ModuleProfile, True, 7)
 PROFILE_GET_DATA_FW = make_command(Facility.ModuleProfile, True, 8)
 PROFILE_SET_DATA_FW = make_command(Facility.ModuleProfile, True, 9)
+
+# ModuleSystemSettings
+GET_ME_TILE_IMAGE_ID = make_command(Facility.ModuleSystemSettings, True, 18)
+CARGO_SYSTEM_SETTINGS_OOBE_COMPLETED_GET = make_command(
+    Facility.ModuleSystemSettings, True, 19)
+CARGO_SYSTEM_SETTINGS_OOBE_COMPLETED_SET = make_command(
+    Facility.ModuleSystemSettings, False, 1)
 
 # ModuleOobe
 OOBE_SET_STAGE = make_command(
