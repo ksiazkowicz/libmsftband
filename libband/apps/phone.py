@@ -9,8 +9,7 @@ from libband.filetimes import datetime_to_filetime
 from libband.notifications import Notification, NotificationTypes
 
 
-class IncomingCallNotification(Notification):
-    notification_type = NotificationTypes.IncomingCall
+class CallNotification(Notification):
     datetime = None
     call_id = None
     caller = 'Test Caller'
@@ -31,12 +30,48 @@ class IncomingCallNotification(Notification):
         return packet
 
 
+class IncomingCallNotification(CallNotification):
+    notification_type = NotificationTypes.IncomingCall
+
+
+class MissedCallNotification(CallNotification):
+    notification_type = NotificationTypes.MissedCall
+
+
+class AnsweredCallNotification(CallNotification):
+    notification_type = NotificationTypes.AnsweredCall
+
+
+class HangupCallNotification(CallNotification):
+    notification_type = NotificationTypes.HangupCall
+
+
+class VoicemailNotification(CallNotification):
+    notification_type = NotificationTypes.Voicemail
+
+
 class PhoneService(App):
     app_name = "Phone Service"
     guid = CALLS
 
+    def answered_call(self, call_id, caller):
+        self.band.send_notification(AnsweredCallNotification(
+            self.guid, call_id, caller))
+
     def incoming_call(self, call_id, caller):
         self.band.send_notification(IncomingCallNotification(
+            self.guid, call_id, caller))
+
+    def missed_call(self, call_id, caller):
+        self.band.send_notification(MissedCallNotification(
+            self.guid, call_id, caller))
+    
+    def hangup_call(self, call_id, caller):
+        self.band.send_notification(HangupCallNotification(
+            self.guid, call_id, caller))
+
+    def voicemail(self, call_id, caller):
+        self.band.send_notification(VoicemailNotification(
             self.guid, call_id, caller))
 
     def push(self, guid, command, message):
