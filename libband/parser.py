@@ -1,5 +1,6 @@
 import struct
 import sys
+import math
 from PIL import Image
 from unidecode import unidecode
 from libband.filetimes import get_time, WINDOWS_TICKS_TO_POSIX_EPOCH
@@ -93,3 +94,144 @@ class MsftBandParser:
                 pixel_array.append(color)
         return struct.pack('H' * (width * height), *pixel_array)
 
+    @staticmethod
+    def decode_icon_rle(icon):
+        num = icon[0] << 8 | icon[1]
+        num2 = icon[2] << 8 | icon[3]
+        num3 = num * num2
+        if num == 0 or num2 == 0 or num3 > 15270:
+            print('Invalid file format')
+            return None, None, None
+        
+        byte_array = bytearray(int(num3 / 2 + num3 % 2))
+        num4 = 0
+        num5 = icon[4] << 8 | icon[5]
+        for i in range(6, num5):
+            b = icon[i] >> 4
+            b2 = icon[i] & 15
+            if b2 == 0:
+                num4 += b
+            else:
+                b3 = 0
+                while b3 < b:
+                    num6 = num4 % 2
+                    if num6 != 0:
+                        if num6 == 1:
+                            num7 = int(num4 / 2)
+                            byte_array[num7] = byte_array[num7] | b2
+                    else:
+                        byte_array[int(num4 / 2)] = b2 << 4
+                    b3 += 1
+                    num4 += 1
+        
+        return num, num2, bytes(byte_array)
+
+    @staticmethod
+    def encode_icon_rle(width, height, icon):
+        rle_array = bytearray(1024)
+        num = 0
+        num2 = 6
+        rle_array[0] = width >> 8
+        rle_array[1] = width
+        rle_array[2] = height >> 8
+        rle_array[3] = height
+
+        # width = 10
+        # height = 10
+
+        for i in range(0, height):
+            b = 0
+            num3 = 0
+            num4 = num % 2
+            if num4 != 0:
+                if num4 == 1:
+                    b = icon[int(num / 2)] & 15
+                    num += 1
+            else:
+                b = (icon[int(num / 2)] >> 4) & 15
+                num += 1
+            num3 += 1
+            for j in range(1, width):
+                b2 = 0
+
+                num4 = num % 2
+                if num4 != 0:
+                    if num4 == 1:
+                        b2 = icon[int(num / 2)] & 15
+                        num += 1
+                else:
+                    b2 = (icon[int(num / 2)] >> 4) & 15
+                    num += 1
+                if b != b2:
+                    if num3 > 0:
+                        rle_array[num2] = ((num3 << 4) | b) % 255
+                        num2 += 1
+                    b = b2
+                    num3 = 0
+                num3 += 1
+
+                if num3 == 15:
+                    if num2 >= 1024:
+                        raise Exception('Encoding failed')
+                    rle_array[num2] = (num3 << 4) | b
+                    num2 += 1
+                    num3 = 0
+            if num3 > 0:
+                if num2 >= 1024:
+                    raise Exception('Encoding failed')
+                rle_array[num2] = (num3 << 4) | b
+                num2 += 1
+        rle_array[4] = (num2 >> 8) % 256
+        rle_array[5] = num2 % 256
+        return rle_array
+
+
+    @staticmethod
+    def alpha4_to_bgra32(image):
+        bgra32_length = len(image) * 2 * 4
+        bgra32_array = bytes([])
+        position = 0
+        num = 0
+        width = height = math.sqrt(bgra32_length / 4)
+        while position < bgra32_length:
+            num2 = num % 2
+            if num2 != 0:
+                if num2 == 1:
+                    index = int(num / 2)
+                    # value = image[index] % 256
+                    value = (image[index] % 16) * 255 / 15
+                    bgra32_array += bytes([
+                        int(value)
+                    ])
+            else:
+                index = int(num / 2)
+                value = ((image[index] % 256) >> 4) * 255/15
+                bgra32_array += bytes([
+                   int(value)
+                ])
+            if position % 4 == 3:
+                num += 1
+            position += 1
+        return bgra32_array
+
+    def bgra32_to_alpha4(image):
+        array_size = int((len(image)/4) / 2 + (len(image)/4) % 2)
+        byte_array = bytearray(array_size)
+        position = 0
+        num = 0
+        while position < len(image):
+            if position % 4 == 3:
+                num2 = num % 2
+                if num2 != 0:
+                    if num2 == 1:
+                        num3 = num / 2
+                        num += 1
+                        value = (image[position] % 256) >> 4
+                        byte_array[int(num3)] |= int(value)
+                else:
+                    num4 = num / 2
+                    num += 1
+                    value = image[position] % 256
+                    byte_array[int(num4)] |= int(value)
+            position += 1
+        return byte_array
