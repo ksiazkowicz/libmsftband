@@ -89,6 +89,13 @@ GET_STATISTICS_SLEEP = make_command(
 GET_STATISTICS_GUIDED_WORKOUT = make_command(
     Facility.ModulePersistedStatistics, True, 5)
 
+# LibraryLogger
+GET_CHUNK_COUNTS = make_command(Facility.LibraryLogger, True, 9)
+FLUSH_LOG = make_command(Facility.LibraryLogger, False, 13)
+GET_CHUNK_RANGE_METADATA = make_command(Facility.LibraryLogger, True, 14)
+GET_CHUNK_RANGE_DATA = make_command(Facility.LibraryLogger, True, 15)
+DELETE_CHUNK_RANGE = make_command(Facility.LibraryLogger, False, 16)
+
 # LibraryJutil
 CORE_GET_VERSION = make_command(Facility.LibraryJutil, True, 1)
 CORE_GET_UNIQUE_ID = make_command(Facility.LibraryJutil, True, 2)
