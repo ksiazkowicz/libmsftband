@@ -119,12 +119,15 @@ class BandSocket:
             result += arguments
         return result
 
-    def cargo_read(self, command, response_size):
+    def cargo_read(self, command, response_size, arguments=None):
+        if not arguments:
+            arguments = struct.pack("<I", response_size)
+
         command_packet = self.make_command_packet(
             command, 
-            4, 
+            len(arguments),
             response_size, 
-            struct.pack("<I", response_size), 
+            arguments, 
             True)
         return self.send_for_result(command_packet)
 
