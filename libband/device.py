@@ -13,7 +13,8 @@ from .commands import SERIAL_NUMBER_REQUEST, CARGO_NOTIFICATION, \
                       START_STRIP_SYNC_START, READ_ME_TILE_IMAGE, \
                       WRITE_ME_TILE_IMAGE_WITH_ID, SUBSCRIBE, \
                       CARGO_SYSTEM_SETTINGS_OOBE_COMPLETED_GET, \
-                      NAVIGATE_TO_SCREEN, GET_ME_TILE_IMAGE_ID
+                      NAVIGATE_TO_SCREEN, GET_ME_TILE_IMAGE_ID, \
+                      GET_TILES, SET_TILES
 from .socket import BandSocket
 from . import PUSH_SERVICE_PORT, layouts
 
@@ -163,6 +164,9 @@ class BandDevice:
         self.push.connect()
         while True:
             result = self.push.receive()
+            if not result:
+                continue
+
             packet_type = struct.unpack("H", result[0:2])[0]
             self.wrapper.print(packet_type)
 
@@ -238,10 +242,10 @@ class BandDevice:
 
         Base, Highlight, Lowlight, SecondaryText, HighContrast, Muted
         """
-        self.cargo.send_for_result(START_STRIP_SYNC_START)
+        self.cargo.cargo_write(START_STRIP_SYNC_START)
         colors = struct.pack("I"*6, *[int(x) for x in colors])
         self.cargo.cargo_write_with_data(SET_THEME_COLOR, colors)
-        self.cargo.send_for_result(START_STRIP_SYNC_END)
+        self.cargo.cargo_write(START_STRIP_SYNC_END)
 
     def get_tiles(self):
         if not self.tiles:
@@ -256,34 +260,92 @@ class BandDevice:
                 self.serial_number = number[0].decode("utf-8")
         return self.serial_number
 
-    def request_tiles(self):
-        result, tiles = self.cargo.send_for_result(GET_TILES_NO_IMAGES)
+    def get_max_tile_capacity(self):
+        # TODO: actual logic for calculating that
+        return 15
+
+    def set_tiles(self):
+        self.cargo.cargo_write(START_STRIP_SYNC_START)
+        # icons = []
+        tiles = []
+
+        data = bytes([])
+        for x in self.tiles:
+            # icons.append(x['icon'])
+            tile = bytes([])
+            tile += x['guid'].bytes_le
+            tile += struct.pack("<I", x['order'])
+            tile += struct.pack("<I", x['theme_color'])
+            tile += struct.pack("<H", len(x['name']))
+            tile += struct.pack("<H", x['settings_mask'])
+            tile += MsftBandParser.serialize_text(x['name'], 30)
+            tiles.append(tile)
+        # data = b''.join(icons)
+        data += struct.pack("<I", len(tiles))
+        data += b''.join(tiles)
+
+        result = self.cargo.cargo_write_with_data(SET_TILES, data, struct.pack("<I", len(tiles)))
+        self.cargo.cargo_write(START_STRIP_SYNC_END)
+        return result
+
+    def request_tiles(self, icons=False):
+        max_tiles = self.get_max_tile_capacity()
+        response_size = 88 * max_tiles + 4
+        command = GET_TILES_NO_IMAGES
+
+        if icons:
+            response_size += max_tiles * 1024
+            command = GET_TILES
+
+        result, tiles = self.cargo.cargo_read(
+            command, response_size)
         tile_data = b"".join(tiles)
 
         tile_list = []
+        tile_icons = []
 
-        # no idea what these 4 bytes are yet
-        begin = 4
+        begin = 0
+
+        if icons:
+            for i in range(0, max_tiles):
+                tile_icons.append(tile_data[begin:begin+1024])
+                begin += 1024
+
+        # first 4 bytes are tile count
+        tile_count = struct.unpack("<I", tile_data[begin:begin+4])[0]
+        begin += 4
+        i = 0
+
         # while there are tiles
-        while begin + 88 <= len(tile_data):
+        while i < tile_count:
             # get guuid
             guid = uuid.UUID(bytes_le=tile_data[begin:begin+16])
-            # that thing after guuid that might be an icon (?)
-            icon = tile_data[begin+16:begin+16+12]
-
+            order = struct.unpack("<I", tile_data[begin+16:begin+20])[0]
+            theme_color = struct.unpack("<I", tile_data[begin+20:begin+24])[0]
+            name_length = struct.unpack("<H", tile_data[begin+24:begin+26])[0]
+            settings_mask = struct.unpack("<H", tile_data[begin+26:begin+28])[0]
+            
             # get tile name
-            name = MsftBandParser.bytes_to_text(tile_data[begin+28:begin+80])
+            if name_length:
+                name = MsftBandParser.bytes_to_text(
+                    tile_data[begin+28:begin+80])
+            else:
+                name = ''
 
             # append tile to list
             tile_list.append({
                 "guid": guid,
-                "icon": icon,
-                # convert name to readable format
-                "name": name
+                "order": order,
+                "theme_color": theme_color,
+                "name_length": name_length,
+                "settings_mask": settings_mask,
+                "name": name,
+                "icon": tile_icons[i] if icons else None
             })
 
             # move to next tile
             begin += 88
+            i += 1
         self.tiles = tile_list
 
     def send_notification(self, notification):

@@ -5,7 +5,6 @@ from .facilities import Facility
 
 FACILITIES = {
     "CargoNotification": b"\xcc",
-    "ModuleInstalledAppList": b"\xd4",
     "LibraryRemoteSubscription": b"\x8f",
 }
 
@@ -24,12 +23,29 @@ WRITE_ME_TILE_IMAGE_WITH_ID = make_command(
 NAVIGATE_TO_SCREEN = make_command(Facility.ModuleFireballUI, False, 0)
 
 # Installed Apps
-START_STRIP_SYNC_START = make_command_legacy(
-    FACILITIES["ModuleInstalledAppList"], False, 2) + struct.pack("<I", 0)
-START_STRIP_SYNC_END = make_command_legacy(
-    FACILITIES["ModuleInstalledAppList"], False, 3) + struct.pack("<I", 0)
-GET_TILES_NO_IMAGES = make_command_legacy(
-    FACILITIES["ModuleInstalledAppList"], True, 18) + struct.pack("<I", 1324)
+GET_TILES = make_command(Facility.ModuleInstalledAppList, True, 0)
+SET_TILES = make_command(Facility.ModuleInstalledAppList, False, 1)
+START_STRIP_SYNC_START = make_command(
+    Facility.ModuleInstalledAppList, False, 2)
+START_STRIP_SYNC_END = make_command(
+    Facility.ModuleInstalledAppList, False, 3)
+GET_TILES_DEFAULTS = make_command(Facility.ModuleInstalledAppList, True, 4)
+SET_TILE = make_command(Facility.ModuleInstalledAppList, False, 6)
+GET_TILE = make_command(Facility.ModuleInstalledAppList, True, 7)
+GET_TILE_SETTINGS_MASK = make_command(
+    Facility.ModuleInstalledAppList, True, 13)
+SET_TILE_SETTINGS_MASK = make_command(
+    Facility.ModuleInstalledAppList, False, 14)
+TILES_ENABLE_SETTING = make_command(
+    Facility.ModuleInstalledAppList, False, 15)
+TILES_DISABLE_SETTING = make_command(
+    Facility.ModuleInstalledAppList, False, 16)
+GET_TILES_NO_IMAGES = make_command(
+    Facility.ModuleInstalledAppList, True, 18)
+GET_MAX_TILE_COUNT = make_command(
+    Facility.ModuleInstalledAppList, True, 21)
+GET_MAX_TILE_ALLOCATED_COUNT = make_command(
+    Facility.ModuleInstalledAppList, True, 22)
 
 # Cargo Notification
 PUSH_NOTIFICATION = make_command_legacy(
