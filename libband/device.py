@@ -15,8 +15,12 @@ from .commands import SERIAL_NUMBER_REQUEST, CARGO_NOTIFICATION, \
                       CARGO_SYSTEM_SETTINGS_OOBE_COMPLETED_GET, \
                       NAVIGATE_TO_SCREEN, GET_ME_TILE_IMAGE_ID, \
                       GET_TILES, SET_TILES, GET_CHUNK_RANGE_METADATA, \
-                      GET_CHUNK_RANGE_DATA, FLUSH_LOG, GET_CHUNK_COUNTS
+                      GET_CHUNK_RANGE_DATA, FLUSH_LOG, GET_CHUNK_COUNTS, \
+                      UNSUBSCRIBE, SUBSCRIPTION_GET_DATA_LENGTH, \
+                      SUBSCRIPTION_GET_DATA, SUBSCRIPTION_SUBSCRIBE_ID, \
+                      SUBSCRIPTION_UNSUBSCRIBE_ID
 from .socket import BandSocket
+from .sensors import Sensor, PedometerSensor
 from . import PUSH_SERVICE_PORT, layouts
 
 
@@ -165,9 +169,6 @@ class BandDevice:
         self.push.connect()
         while True:
             result = self.push.receive()
-            if not result:
-                continue
-
             packet_type = struct.unpack("H", result[0:2])[0]
             self.wrapper.print(packet_type)
 
@@ -184,10 +185,11 @@ class BandDevice:
                     quality = result[12] >= 6
                     self.wrapper.print("Heart Rate: %d (%s)" % (
                         value, "Locked" if quality else "Acquiring"))
-                elif subscription_type == 19:
+                elif subscription_type == Sensor.Pedometer:
                     # Pedometer
-                    value = struct.unpack("L", result[11:15])
-                    self.wrapper.print("Pedometer: %d" % value)
+                    sensor = PedometerSensor()
+                    sensor.decode_packet(result[2:])
+                    self.wrapper.print("Pedometer: %d" % sensor.value)
                 elif subscription_type == 35:
                     # Device Contact sensor
                     value = result[11]
@@ -220,8 +222,14 @@ class BandDevice:
                 self.wrapper.print(binascii.hexlify(result))
 
     def subscribe(self, subscription_type):
-        command = SUBSCRIBE + b"\x00"*4 + struct.pack("L", subscription_type) + struct.pack("L", 0) # b"\x00"
-        result = self.cargo.send_for_result(command)
+        arguments = struct.pack("Bxxxx", subscription_type)
+        result, info = self.cargo.cargo_write(SUBSCRIBE, arguments)
+        return result
+
+    def unsubscribe(self, subscription_type):
+        arguments = struct.pack("B", subscription_type)
+        result, info = self.cargo.cargo_write(UNSUBSCRIBE, arguments)
+        return result
 
     def sync(self):
         for service in self.services.values():

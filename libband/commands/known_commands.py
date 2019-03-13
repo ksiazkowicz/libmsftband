@@ -5,7 +5,6 @@ from .facilities import Facility
 
 FACILITIES = {
     "CargoNotification": b"\xcc",
-    "LibraryRemoteSubscription": b"\x8f",
 }
 
 
@@ -56,7 +55,16 @@ CARGO_NOTIFICATION = make_command(Facility.ModuleNotification, False, 0)
 SERIAL_NUMBER_REQUEST = make_command(Facility.LibraryConfiguration, True, 8)
 
 # Library Remote Subscription
-SUBSCRIBE = make_command_legacy(FACILITIES["LibraryRemoteSubscription"], False, 0, b"\x0d")
+SUBSCRIBE = make_command(Facility.LibraryRemoteSubscription, False, 0)
+UNSUBSCRIBE = make_command(Facility.LibraryRemoteSubscription, False, 1)
+SUBSCRIPTION_GET_DATA_LENGTH = make_command(
+    Facility.LibraryRemoteSubscription, True, 2)
+SUBSCRIPTION_GET_DATA = make_command(
+    Facility.LibraryRemoteSubscription, True, 3)
+SUBSCRIPTION_SUBSCRIBE_ID = make_command(
+    Facility.LibraryRemoteSubscription, False, 7)
+SUBSCRIPTION_UNSUBSCRIBE_ID = make_command(
+    Facility.LibraryRemoteSubscription, False, 8)
 
 # ModuleProfile
 PROFILE_GET_DATA_APP = make_command(Facility.ModuleProfile, True, 6)
