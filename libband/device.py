@@ -20,7 +20,7 @@ from .commands import SERIAL_NUMBER_REQUEST, CARGO_NOTIFICATION, \
                       SUBSCRIPTION_GET_DATA, SUBSCRIPTION_SUBSCRIBE_ID, \
                       SUBSCRIPTION_UNSUBSCRIBE_ID
 from .socket import BandSocket
-from .sensors import Sensor, PedometerSensor
+from .sensors import Sensor, PedometerSensor, DeviceContactSensor
 from . import PUSH_SERVICE_PORT, layouts
 
 
@@ -190,10 +190,11 @@ class BandDevice:
                     sensor = PedometerSensor()
                     sensor.decode_packet(result[2:])
                     self.wrapper.print("Pedometer: %d" % sensor.value)
-                elif subscription_type == 35:
+                elif subscription_type == Sensor.DeviceContact:
                     # Device Contact sensor
-                    value = result[11]
-                    self.wrapper.print("Device Contact: %s" % ("True" if value else "False"))
+                    sensor = DeviceContactSensor()
+                    sensor.decode_packet(result[2:])
+                    self.wrapper.print("Device Contact: %s" % (sensor.value, ))
                 elif subscription_type == 38:
                     # Battery Gauge
                     percent_charge = result[11]
