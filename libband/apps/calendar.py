@@ -72,6 +72,13 @@ class CalendarService(App):
     guid = CALENDAR
     events = []
 
+    def sync(self):
+        try:
+            self.send_events()
+            return True
+        except:
+            return False
+
     def send_events(self):
         self.clear_tile()
         for event in self.events[:8]:
