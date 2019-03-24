@@ -20,7 +20,7 @@ from .commands import SERIAL_NUMBER_REQUEST, CARGO_NOTIFICATION, \
                       SUBSCRIPTION_GET_DATA, SUBSCRIPTION_SUBSCRIBE_ID, \
                       SUBSCRIPTION_UNSUBSCRIBE_ID
 from .socket import BandSocket
-from .sensors import Sensor, PedometerSensor, DeviceContactSensor
+from .sensors import Sensor, decode_sensor_reading
 from . import PUSH_SERVICE_PORT, layouts
 
 
@@ -173,44 +173,8 @@ class BandDevice:
             self.wrapper.print(packet_type)
 
             if packet_type == 1:
-                # sensor data
-                packet_length = struct.unpack("L", result[2:6])[0]
-                subscription_type = struct.unpack("B", result[6:7])[0]
-                missed_samples = struct.unpack("B", result[7:8])[0]
-                sample_size = struct.unpack("H", result[9:11])[0]
-
-                if subscription_type == 16:
-                    # Heart Rate sensor
-                    value = result[11]
-                    quality = result[12] >= 6
-                    self.wrapper.print("Heart Rate: %d (%s)" % (
-                        value, "Locked" if quality else "Acquiring"))
-                elif subscription_type == Sensor.Pedometer:
-                    # Pedometer
-                    sensor = PedometerSensor()
-                    sensor.decode_packet(result[2:])
-                    self.wrapper.print("Pedometer: %d" % sensor.value)
-                elif subscription_type == Sensor.DeviceContact:
-                    # Device Contact sensor
-                    sensor = DeviceContactSensor()
-                    sensor.decode_packet(result[2:])
-                    self.wrapper.print("Device Contact: %s" % (sensor.value, ))
-                elif subscription_type == 38:
-                    # Battery Gauge
-                    percent_charge = result[11]
-                    filtered_voltage = struct.unpack("H", result[11:13])[0]
-                    battery_gauge_alerts = struct.unpack("H", result[13:15])[0]
-
-                    percent = (percent_charge / 10)*10
-                    if percent > 100:
-                        percent = 100
-
-                    self.wrapper.send("Sensor::Battery", percent)
-                    self.wrapper.print("Battery Gauge: %d | Filtered Voltage: %s | Alerts: %s" % (
-                        percent_charge, filtered_voltage, battery_gauge_alerts))
-                else:
-                    self.wrapper.print(binascii.hexlify(result))
-                    self.wrapper.print(subscription_type, missed_samples, sample_size)
+                sensor = decode_sensor_reading(result)
+                self.wrapper.print(sensor)
             elif packet_type == 100:
                 self.process_notification_callback(result)
             elif packet_type == 101:

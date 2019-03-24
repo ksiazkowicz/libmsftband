@@ -37,6 +37,10 @@ class SensorReading():
     missed_samples = 0
     sample_size = 0
 
+    def __str__(self):
+        return '%s Value: %s' % (
+            self.subscription_type, self.value)
+
     @property
     def header_length(self):
         return 4 + 1 + 1 + 2
@@ -51,7 +55,7 @@ class DeviceContactSensor(SensorReading):
 
     def decode_packet(self, packet):
         super().decode_packet(packet)
-        self.value = packet[self.header_length+1] == 1
+        self.value = packet[self.header_length + 1] == 1
 
 
 class PedometerSensor(SensorReading):
@@ -61,5 +65,49 @@ class PedometerSensor(SensorReading):
         super().decode_packet(packet)
         self.value = struct.unpack("L", packet[
             self.header_length:self.header_length + self.packet_length])
-        print('Pedometer: %d' % self.value)
-        
+
+
+class HeartRateSensor(SensorReading):
+    subscription_type = Sensor.HeartRate
+    quality = False
+
+    def decode_packet(self, packet):
+        super().decode_packet(packet)
+        self.value = packet[self.header_length + 1]
+        self.quality = packet[self.header_length + 2] >= 6
+
+
+class BatteryGaugeSensor(SensorReading):
+    subscription_type = Sensor.BatteryGauge
+    filtered_voltage = 0
+    battery_gauge_alerts = 0
+
+    def decode_packet(self, packet):
+        super().decode_packet(packet)
+        beginning = self.header_length
+        self.filtered_voltage = struct.unpack(
+            "H", packet[beginning + 1 : beginning + 2])
+        self.battery_gauge_alerts = struct.unpack(
+            "H", packet[beginning + 2 : beginning + 4])
+        self.value = (packet[beginning + 1] / 10) * 10
+        self.value = 100 if self.value > 100 else self.value
+
+
+def decode_sensor_reading(packet):
+    """
+    Detect which sensor reading we got and decode it
+    """
+    subscription_type = packet[6]
+
+    if subscription_type == Sensor.HeartRate:
+        sensor = HeartRateSensor()
+    elif subscription_type == Sensor.Pedometer:
+        sensor = PedometerSensor()
+    elif subscription_type == Sensor.DeviceContact:
+        sensor = DeviceContactSensor()
+    elif subscription_type == Sensor.BatteryGauge:
+        sensor = BatteryGaugeSensor()
+    else:
+        sensor = SensorReading()
+    sensor.decode_packet(packet[2:])
+    return sensor
