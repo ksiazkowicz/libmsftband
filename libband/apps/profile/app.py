@@ -14,9 +14,10 @@ class ProfileService(App):
     def sync(self):
         if not self.profile:
             self.get_profile()
+            return True
         else:
             self.profile.last_sync = datetime.now()
-            self.save_profile()
+            return self.save_profile()
 
     def get_profile(self):
         result, info = self.band.cargo.cargo_read(PROFILE_GET_DATA_APP, 128)
