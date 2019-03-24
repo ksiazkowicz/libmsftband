@@ -4,11 +4,9 @@ import struct
 import requests
 import geocoder
 from datetime import datetime, timedelta
-from libband import NOTIFICATION_TYPES
-from libband import layouts
-from libband import OPENCAGE_KEY
+from libband import layouts, OPENCAGE_KEY
+from libband.notifications import NotificationTypes, Notification
 from libband.tiles import WEATHER
-from libband.commands import PUSH_NOTIFICATION
 from .app import App
 
 
@@ -45,6 +43,21 @@ ICON_MAP = {
     29: 1,  # Mostly Clear
     31: 2,  # Mostly Cloudy
 }
+
+
+class WeatherUpdateNotificiation(Notification):
+    guid = WEATHER
+    forecast = bytes([])
+    notification_type = NotificationTypes.GenericUpdate
+
+    def __init__(self, forecast=bytes([])):
+        super().__init__()
+        self.forecast = forecast
+
+    def serialize(self):
+        packet = super().serialize()
+        packet += self.forecast
+        return packet
 
 
 class WeatherService(App):
@@ -121,14 +134,8 @@ class WeatherService(App):
 
     def push_forecast(self, forecasts):
         self.band.clear_tile(WEATHER)
-
-        update_prefix = NOTIFICATION_TYPES["GenericUpdate"]
-        update_prefix += WEATHER.bytes_le
-
         success = False
         for forecast in forecasts:
-            packet = update_prefix + forecast
-            self.band.cargo.send(
-                PUSH_NOTIFICATION + struct.pack("<i", len(packet)))
-            success, result = self.band.cargo.send_for_result(packet)
+            success = self.band.send_notification(
+                WeatherUpdateNotificiation(forecast))
         return success

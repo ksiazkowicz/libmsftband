@@ -1,7 +1,8 @@
 import struct
 import uuid
 from .app import App
-from libband import NOTIFICATION_TYPES, layouts
+from libband import layouts
+from libband.notifications import NotificationTypes, Notification
 from libband.commands import PUSH_NOTIFICATION, FACILITIES
 from libband.tiles import MUSIC_CONTROL
 
@@ -11,14 +12,26 @@ CONTROLS_PAGE = uuid.UUID("84c43f9d-90c9-4efb-8aa6-d673617d3ac4")
 VOLUME_PAGE = uuid.UUID("545024f9-ccec-4962-8c21-e3835cf6b506")
 
 
+class MusicUpdateNotificiation(Notification):
+    guid = MUSIC_CONTROL
+    page = bytes([])
+    notification_type = NotificationTypes.GenericUpdate
+
+    def __init__(self, page=bytes([])):
+        super().__init__()
+        self.page = page
+
+    def serialize(self):
+        packet = super().serialize()
+        packet += self.page
+        return packet
+
+
 class MusicService(App):
     app_name = "Music Service"
     guid = MUSIC_CONTROL
 
     def metadata_update(self, title, artist, album):
-        update_prefix = NOTIFICATION_TYPES["GenericUpdate"]
-        update_prefix += MUSIC_CONTROL.bytes_le
-
         success = False
 
         pages = [
@@ -30,11 +43,8 @@ class MusicService(App):
         ]
 
         for page in pages:
-            page_update = update_prefix + page
-            self.band.cargo.send(
-                PUSH_NOTIFICATION + struct.pack("<i", len(page_update)))
-
-            success, result = self.band.cargo.send_for_result(page_update)
+            success = self.band.send_notification(
+                MusicUpdateNotificiation(page))
         return success
 
     def push(self, guid, command, message):
