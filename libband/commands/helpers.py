@@ -42,22 +42,3 @@ def make_command(facility, is_tx, index):
     # make command
     command = facility.value << 8 | int(is_tx) << 7 | index
     return command
-
-
-def make_command_legacy(facility, is_tx, index, prefix=b"\x08"):
-    """
-    Old make_command method that I wrote before I understood how exactly
-    commands are encoded. Deprecated.
-    """
-    # TX bit, 2 bytes
-    tx_bit = b"\x01\x00" if is_tx else b"\x00\x00"
-    tx_int = struct.unpack('<H', tx_bit)[0]
-
-    # category, for example Notifications, encoded as 2 bytes
-    facility += (2 - len(facility)) * b"\x00"
-    facility_int = struct.unpack('<H', facility)[0]
-
-    # make command
-    command = facility_int << 8 | tx_int << 7 | index
-
-    return prefix + b"\xf9\x2e" + struct.pack("<H", command)

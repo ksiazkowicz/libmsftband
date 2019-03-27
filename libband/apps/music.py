@@ -3,7 +3,6 @@ import uuid
 from .app import App
 from libband import layouts
 from libband.notifications import NotificationTypes, Notification
-from libband.commands import PUSH_NOTIFICATION, FACILITIES
 from libband.tiles import MUSIC_CONTROL
 
 

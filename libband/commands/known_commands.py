@@ -1,11 +1,6 @@
 import struct
-from .helpers import make_command, make_command_legacy
+from .helpers import make_command
 from .facilities import Facility
-
-
-FACILITIES = {
-    "CargoNotification": b"\xcc",
-}
 
 
 # LibraryTime
@@ -47,8 +42,6 @@ GET_MAX_TILE_ALLOCATED_COUNT = make_command(
     Facility.ModuleInstalledAppList, True, 22)
 
 # Cargo Notification
-PUSH_NOTIFICATION = make_command_legacy(
-    FACILITIES["CargoNotification"], False, 0)
 CARGO_NOTIFICATION = make_command(Facility.ModuleNotification, False, 0)
 
 # Library Configuration
