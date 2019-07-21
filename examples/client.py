@@ -1,12 +1,8 @@
-import json
-
 from libband.device import BandDevice
-from libband.apps.weather import WeatherService
-from libband.apps.time import TimeService
-from libband.apps.phone import PhoneService
-from libband.apps.metrics import MetricsService
-from libband.apps.profile import ProfileService
-from libband.apps.calendar import CalendarService
+from libband.apps import (
+    WeatherService, TimeService, PhoneService, MetricsService, ProfileService,
+    CalendarService, SensorLogService
+)
 
 
 class ExampleClient:
@@ -25,20 +21,12 @@ class ExampleClient:
             for name, service in self.services.items():
                 service.band = self.device
         else:
-            time_service = TimeService(self.device)
-            weather_service = WeatherService(self.device)
-            metrics_service = MetricsService(self.device)
-            phone_service = PhoneService(self.device)
-            profile_service = ProfileService(self.device)
-            calendar_service = CalendarService(self.device)
-
             self.services = {
-                "TimeService": time_service,
-                "WeatherApp": weather_service,
-                "MetricsApp": metrics_service,
-                "PhoneApp": phone_service,
-                "ProfileApp": profile_service,
-                "CalendarApp": calendar_service,
+                Service.__name__: Service(self.device)
+                for Service in (
+                    TimeService, WeatherService, MetricsService, PhoneService,
+                    ProfileService, CalendarService, SensorLogService
+                )
             }
         self.device.services = self.services
         self.device.connect()

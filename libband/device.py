@@ -14,8 +14,7 @@ from .commands import SERIAL_NUMBER_REQUEST, CARGO_NOTIFICATION, \
                       WRITE_ME_TILE_IMAGE_WITH_ID, SUBSCRIBE, \
                       CARGO_SYSTEM_SETTINGS_OOBE_COMPLETED_GET, \
                       NAVIGATE_TO_SCREEN, GET_ME_TILE_IMAGE_ID, \
-                      GET_TILES, SET_TILES, GET_CHUNK_RANGE_METADATA, \
-                      GET_CHUNK_RANGE_DATA, FLUSH_LOG, GET_CHUNK_COUNTS, \
+                      GET_TILES, SET_TILES, \
                       UNSUBSCRIBE, SUBSCRIPTION_GET_DATA_LENGTH, \
                       SUBSCRIPTION_GET_DATA, SUBSCRIPTION_SUBSCRIBE_ID, \
                       SUBSCRIPTION_UNSUBSCRIBE_ID
@@ -237,49 +236,6 @@ class BandDevice:
     def get_max_tile_capacity(self):
         # TODO: actual logic for calculating that
         return 15
-
-    def flush_log(self):
-        return self.cargo.cargo_write(FLUSH_LOG)
-
-    def get_remaining_chunks(self):
-        result, counts = self.cargo.cargo_read(GET_CHUNK_COUNTS, 8)
-        if counts:
-            return struct.unpack("<I", counts[0][:4])[0]
-        return 0
-
-    def get_chunk_range_metadata(self, chunk_count):
-        arguments = struct.pack("<I", chunk_count)
-        result, range_metadata = self.cargo.cargo_read(
-            GET_CHUNK_RANGE_METADATA, 12, arguments)
-        if range_metadata:
-            starting_seq, ending_seq, byte_count = struct.unpack("<III", range_metadata[0])
-            return starting_seq, ending_seq, byte_count
-        return None
-
-    def get_chunk_range_data(self, metadata):
-        arguments = struct.pack("<III", *metadata)
-        result, range_data = self.cargo.cargo_read(
-            GET_CHUNK_RANGE_DATA, metadata[2], arguments
-        )
-        return result, range_data
-
-    def fetch_sensor_log(self, max_chunk_count=128):
-        sensor_log = bytes([])
-        flushed = False
-        while not flushed:
-            print('Trying to flush log')
-            flushed = self.flush_log()
-        print('Log flushed. Fetching remaining chunk count')
-        remaining_chunks = 1 # self.get_remaining_chunks()
-        while remaining_chunks > 0:
-            chunks_to_fetch = min(max_chunk_count, remaining_chunks)
-            print('Fetching %s/%s of remaining chunks' % (
-                chunks_to_fetch, remaining_chunks))
-            metadata = self.get_chunk_range_metadata(chunks_to_fetch)
-            result, log = self.get_chunk_range_data(metadata)
-            sensor_log += b''.join(log)
-            remaining_chunks -= chunks_to_fetch
-        return sensor_log
 
     def set_tiles(self):
         self.cargo.cargo_write(START_STRIP_SYNC_START)
