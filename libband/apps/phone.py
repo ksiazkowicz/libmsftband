@@ -1,4 +1,3 @@
-import binascii
 import struct
 from datetime import datetime
 from .app import App
@@ -19,7 +18,7 @@ class CallNotification(Notification):
         self.call_id = call_id
         self.caller = caller
         self.datetime = datetime.now()
-    
+
     def serialize(self):
         caller = self.caller[:20]
         packet = super().serialize()
@@ -65,7 +64,7 @@ class PhoneService(App):
     def missed_call(self, call_id, caller):
         self.band.send_notification(MissedCallNotification(
             self.guid, call_id, caller))
-    
+
     def hangup_call(self, call_id, caller):
         self.band.send_notification(HangupCallNotification(
             self.guid, call_id, caller))
@@ -83,5 +82,5 @@ class PhoneService(App):
                 message["command"] = "reply"
                 message["call_id"] = call_id
                 message["text"] = text
-        
+
         return message

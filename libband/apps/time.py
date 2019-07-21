@@ -7,7 +7,6 @@ from .app import App
 
 class TimeService(App):
     app_name = "Time Service"
-    guid = None
 
     def sync(self):
         return self.set_device_time(datetime.now())
@@ -23,4 +22,3 @@ class TimeService(App):
             struct.pack("<Q", datetime_to_filetime(new_time))
         )
         return result
-

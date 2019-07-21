@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 import uuid
-import struct
 import requests
 import geocoder
 from datetime import datetime, timedelta
@@ -87,7 +86,8 @@ class WeatherService(App):
 
         try:
             response = response.json()
-        except:
+        except Exception as exc:
+            self.band.wrapper.send("Debug", str([exc]))
             return
         response = self.parse_weather_forecast(response)
         self.last_update = datetime.now()
@@ -122,10 +122,18 @@ class WeatherService(App):
         self.band.wrapper.send("Debug", [now_icon, str(type(now_icon))])
         now = datetime.now()
 
-        self.band.wrapper.send("Debug", [(x.get("icon"), x.get("cap", "")) for x in forecasts])
+        self.band.wrapper.send(
+            "Debug",
+            [
+                (x.get("icon"), x.get("cap", ""))
+                for x in forecasts
+            ]
+        )
 
         weather_args += [{
-            "header": (now + timedelta(days=i)).strftime("%A") if i > 0 else "Today",
+            "header": (
+                (now + timedelta(days=i)).strftime("%A") if i > 0 else "Today"
+            ),
             "largeIcon": ICON_MAP.get(day.get("icon"), day.get("icon")),
             "metric": "%d" % day.get("tempHi", 0) + "\xb0",
             "secondary_metric": "/%d" % day.get("tempLo", 0) + "\xb0"

@@ -40,7 +40,8 @@ class BandSocket:
     def disconnect(self):
         try:
             self.socket.close()
-        except:
+        except Exception as exc:
+            self.device.wrapper.send("Debug", [str(exc)])
             pass
         self.reconnect_count = 0
         self.device.wrapper.send("Status", "Disconnected")
@@ -80,7 +81,7 @@ class BandSocket:
             self.socket.settimeout(6.0)
             result = self.receive(BUFFER_SIZE)
 
-            # break when we get empty response 
+            # break when we get empty response
             # (because we forgot to break on error? no clue)
             if not result:
                 break
@@ -105,7 +106,8 @@ class BandSocket:
 
     def make_command_packet(
         self, command, arguments_buffer_size, data_stage_size, arguments,
-        prepend_size):
+        prepend_size
+    ):
         result = bytes([])
         if prepend_size:
             result += bytes([8 + arguments_buffer_size])
@@ -121,27 +123,31 @@ class BandSocket:
             arguments = struct.pack("<I", response_size)
 
         command_packet = self.make_command_packet(
-            command, 
+            command,
             len(arguments),
-            response_size, 
-            arguments, 
-            True)
+            response_size,
+            arguments,
+            True
+        )
         return self.send_for_result(command_packet)
 
     def cargo_write(self, command, arguments=None):
         packet = self.make_command_packet(
-            command, 
-            len(arguments) if arguments else 0, 
-            0, arguments, True)
+            command,
+            len(arguments) if arguments else 0,
+            0,
+            arguments,
+            True
+        )
         return self.send_for_result(packet)
 
     def cargo_write_with_data(self, command, data, arguments=None):
         packet = self.make_command_packet(
-            command, 
-            len(arguments) if arguments else 0, 
-            len(data) if data else 0, 
-            arguments, 
-            True)
+            command,
+            len(arguments) if arguments else 0,
+            len(data) if data else 0,
+            arguments,
+            True
+        )
         self.send(packet)
         return self.send_for_result(data)
-    

@@ -1,11 +1,10 @@
+import struct
 from enum import IntEnum
-from .app import App
 from libband.notifications import Notification, NotificationTypes
 from libband.tiles import CALENDAR
 from libband.parser import MsftBandParser
 from libband.filetimes import datetime_to_filetime
-import struct
-import binascii
+from .app import App
 
 
 class CalendarEventAcceptedState(IntEnum):
@@ -32,10 +31,11 @@ class CalendarEvent(Notification):
     accepted_state = CalendarEventAcceptedState.Accepted
 
     def __init__(
-        self, title, location, start_time, duration, all_day=False, 
-        notification_time=15, 
+        self, title, location, start_time, duration, all_day=False,
+        notification_time=15,
         event_category=CalendarEventCategory.NoSpecialFormatting,
-        accepted_state=CalendarEventAcceptedState.Accepted):
+        accepted_state=CalendarEventAcceptedState.Accepted
+    ):
         self.title = title
         self.location = location
         self.start_time = start_time
@@ -76,7 +76,8 @@ class CalendarService(App):
         try:
             self.send_events()
             return True
-        except:
+        except Exception as exc:
+            self.band.wrapper.send("Debug", [str(exc)])
             return False
 
     def send_events(self):

@@ -12,14 +12,14 @@ def lookup_packet(packet):
     binary_packet = binascii.unhexlify(packet)
     command_part_start = binary_packet.index(struct.pack("<H", 12025)) + 2
     command = binary_packet[command_part_start:command_part_start+2]
-    
+
     data_stage_size = struct.unpack(
         "<I", binary_packet[command_part_start+2:command_part_start+6])
-    
+
     arguments = binary_packet[command_part_start+6:]
-    
+
     return {
-        'command': lookup_command(struct.unpack("<H", command)[0]), 
+        'command': lookup_command(struct.unpack("<H", command)[0]),
         'data_stage_size': data_stage_size,
         'arguments': arguments
     }

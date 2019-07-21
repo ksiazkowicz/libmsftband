@@ -2,7 +2,6 @@ from libband.notifications import GenericClearTileNotification
 
 
 class App:
-    band = None
     app_name = "App"
     guid = None
 

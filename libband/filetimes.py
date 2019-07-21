@@ -1,25 +1,35 @@
 import datetime
-import struct
 import time
 
-WINDOWS_TICKS = int(1/10**-7)  # 10,000,000 (100 nanoseconds or .1 microseconds)
-WINDOWS_EPOCH = datetime.datetime.strptime('1601-01-01 00:00:00',
-                                           '%Y-%m-%d %H:%M:%S')
-POSIX_EPOCH = datetime.datetime.strptime('1970-01-01 00:00:00',
-                                         '%Y-%m-%d %H:%M:%S')
-EPOCH_DIFF = (POSIX_EPOCH - WINDOWS_EPOCH).total_seconds()  # 11644473600.0
-WINDOWS_TICKS_TO_POSIX_EPOCH = EPOCH_DIFF * WINDOWS_TICKS  # 116444736000000000.0
+
+# 10,000,000 (100 nanoseconds or .1 microseconds)
+WINDOWS_TICKS = int(1/10**-7)
+WINDOWS_EPOCH = datetime.datetime.strptime(
+    '1601-01-01 00:00:00', '%Y-%m-%d %H:%M:%S'
+)
+POSIX_EPOCH = datetime.datetime.strptime(
+    '1970-01-01 00:00:00', '%Y-%m-%d %H:%M:%S'
+)
+
+# 11644473600.0
+EPOCH_DIFF = (POSIX_EPOCH - WINDOWS_EPOCH).total_seconds()
+
+# 116444736000000000.0
+WINDOWS_TICKS_TO_POSIX_EPOCH = EPOCH_DIFF * WINDOWS_TICKS
+
 
 def get_time(filetime):
     """Convert windows filetime winticks to python datetime.datetime."""
     microsecs = (filetime - WINDOWS_TICKS_TO_POSIX_EPOCH) / WINDOWS_TICKS
     return datetime.datetime.fromtimestamp(int(microsecs))
 
+
 def datetime_to_filetime(timestamp):
     """Converts Python datetime object to Windows filetime"""
     posix_secs = int(time.mktime(timestamp.timetuple()))
     winticks = (posix_secs + int(EPOCH_DIFF)) * WINDOWS_TICKS
     return winticks
+
 
 def int_to_bytes(n, minlen=0):  # helper function
     """ int/long to bytes (little-endian byte order).
@@ -34,6 +44,7 @@ def int_to_bytes(n, minlen=0):  # helper function
     if minlen > 0 and len(ba) < minlen:  # zero pad?
         ba.extend([0] * (minlen-len(ba)))
     return ba  # with low bytes first
+
 
 def hexbytes(s):  # formatting helper function
     """Convert string to string of hex character values."""

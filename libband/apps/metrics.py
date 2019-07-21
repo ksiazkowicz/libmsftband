@@ -43,7 +43,9 @@ class MetricsService(App):
 
         data = b"".join(metrics)
 
-        timestamp = MsftBandParser.deserialize_time(struct.unpack("Q", data[:8])[0])
+        timestamp = MsftBandParser.deserialize_time(
+            struct.unpack("Q", data[:8])[0]
+        )
         version = struct.unpack("H", data[8:10])[0]
         duration = struct.unpack("L", data[10:14])[0]
         distance = struct.unpack("L", data[14:18])[0]
@@ -52,7 +54,9 @@ class MetricsService(App):
         calories_burned = struct.unpack("L", data[26:30])[0]
         avg_heartrate = struct.unpack("L", data[30:34])[0]
         max_heartrate = struct.unpack("L", data[34:38])[0]
-        end_time = MsftBandParser.deserialize_time(struct.unpack("Q", data[38:46])[0])
+        end_time = MsftBandParser.deserialize_time(
+            struct.unpack("Q", data[38:46])[0]
+        )
         feeling = struct.unpack("L", data[46:50])[0]
 
         self.run = {
@@ -81,13 +85,17 @@ class MetricsService(App):
 
         data = b"".join(metrics)
 
-        timestamp = MsftBandParser.deserialize_time(struct.unpack("Q", data[:8])[0])
+        timestamp = MsftBandParser.deserialize_time(
+            struct.unpack("Q", data[:8])[0]
+        )
         version = struct.unpack("H", data[8:10])[0]
         duration = struct.unpack("L", data[10:14])[0]
         calories_burned = struct.unpack("L", data[14:18])[0]
         avg_heartrate = struct.unpack("L", data[18:22])[0]
         max_heartrate = struct.unpack("L", data[22:26])[0]
-        end_time = MsftBandParser.deserialize_time(struct.unpack("Q", data[26:34])[0])
+        end_time = MsftBandParser.deserialize_time(
+            struct.unpack("Q", data[26:34])[0]
+        )
         feeling = struct.unpack("L", data[34:38])[0]
 
         self.workout = {
@@ -113,13 +121,17 @@ class MetricsService(App):
 
         data = b"".join(metrics)
 
-        timestamp = MsftBandParser.deserialize_time(struct.unpack("Q", data[:8])[0])
+        timestamp = MsftBandParser.deserialize_time(
+            struct.unpack("Q", data[:8])[0]
+        )
         version = struct.unpack("H", data[8:10])[0]
         duration = struct.unpack("L", data[10:14])[0]
         calories_burned = struct.unpack("L", data[14:18])[0]
         avg_heartrate = struct.unpack("L", data[18:22])[0]
         max_heartrate = struct.unpack("L", data[22:26])[0]
-        end_time = MsftBandParser.deserialize_time(struct.unpack("Q", data[26:34])[0])
+        end_time = MsftBandParser.deserialize_time(
+            struct.unpack("Q", data[26:34])[0]
+        )
         rounds_completed = struct.unpack("L", data[34:38])[0]
 
         self.guided_workout = {
@@ -144,7 +156,9 @@ class MetricsService(App):
 
         data = b"".join(metrics)
 
-        timestamp = MsftBandParser.deserialize_time(struct.unpack("Q", data[:8])[0])
+        timestamp = MsftBandParser.deserialize_time(
+            struct.unpack("Q", data[:8])[0]
+        )
         version = struct.unpack("H", data[8:10])[0]
         duration = struct.unpack("L", data[10:14])[0]
         times_woke_up = struct.unpack("L", data[14:18])[0]
@@ -152,7 +166,9 @@ class MetricsService(App):
         time_asleep = struct.unpack("L", data[22:26])[0]
         calories_burned = struct.unpack("L", data[26:30])[0]
         resting_heart_rate = struct.unpack("L", data[30:34])[0]
-        end_time = MsftBandParser.deserialize_time(struct.unpack("Q", data[38:46])[0])
+        end_time = MsftBandParser.deserialize_time(
+            struct.unpack("Q", data[38:46])[0]
+        )
         time_to_fall_asleep = struct.unpack("L", data[46:50])[0]
         feeling = struct.unpack("L", data[50:54])[0]
 

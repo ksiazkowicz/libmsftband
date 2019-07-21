@@ -1,6 +1,8 @@
+import uuid
+import struct
+
 from libband.parser import MsftBandParser
 from libband.filetimes import datetime_to_filetime
-import struct, uuid
 
 
 class Profile:
@@ -17,12 +19,15 @@ class Profile:
     run_display_units = None
     telemetry_enabled = False
 
-
     def __init__(self, data):
         self.version = struct.unpack("<H", data[0:2])[0]
-        self.last_sync = MsftBandParser.deserialize_time(struct.unpack("Q", data[2:10])[0])
+        self.last_sync = MsftBandParser.deserialize_time(
+            struct.unpack("Q", data[2:10])[0]
+        )
         self.user_id = uuid.UUID(bytes_le=data[10:26])
-        self.birthdate = MsftBandParser.deserialize_time(struct.unpack("Q", data[26:34])[0])
+        self.birthdate = MsftBandParser.deserialize_time(
+            struct.unpack("Q", data[26:34])[0]
+        )
         self.weight = struct.unpack("<I", data[34:38])[0] / 1000
         self.height = struct.unpack("<H", data[38:40])[0] / 10
         self.gender = data[40]
@@ -77,8 +82,12 @@ class Profile:
         packet += struct.pack("H", self.locale['id'])
         packet += struct.pack("H", self.locale['language'])
         packet += MsftBandParser.serialize_text(self.locale['date_separator'])
-        packet += MsftBandParser.serialize_text(self.locale['number_separator'])
-        packet += MsftBandParser.serialize_text(self.locale['decimal_separator'])
+        packet += MsftBandParser.serialize_text(
+            self.locale['number_separator']
+        )
+        packet += MsftBandParser.serialize_text(
+            self.locale['decimal_separator']
+        )
         packet += bytes([self.locale['time_format']])
         packet += bytes([self.locale['date_format']])
         packet += bytes([self.locale['distance_short_units']])

@@ -21,4 +21,3 @@ def decode_status(error_code):
 
 def is_severity_error(status):
     return (status & 2147483648) > 0
-

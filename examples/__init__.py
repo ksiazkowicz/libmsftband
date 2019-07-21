@@ -1,1 +1,1 @@
-from .client import ExampleClient
+from .client import ExampleClient  # noqa

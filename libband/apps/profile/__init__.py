@@ -1,1 +1,1 @@
-from .app import ProfileService
+from .app import ProfileService  # noqa

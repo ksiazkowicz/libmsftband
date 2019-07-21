@@ -128,7 +128,6 @@ class VolumeButtonsLayout(Layout):
         }
 
 
-
 class MusicControlLayout(Layout):
     definition = {
         "layout": 2,

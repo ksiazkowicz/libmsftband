@@ -5,7 +5,7 @@ import binascii
 import uuid
 import threading
 
-from .notifications import NotificationTypes, GenericClearTileNotification
+from .notifications import GenericClearTileNotification
 from .parser import MsftBandParser
 from .commands import SERIAL_NUMBER_REQUEST, CARGO_NOTIFICATION, \
                       GET_TILES_NO_IMAGES, CORE_WHO_AM_I, \
@@ -14,13 +14,10 @@ from .commands import SERIAL_NUMBER_REQUEST, CARGO_NOTIFICATION, \
                       WRITE_ME_TILE_IMAGE_WITH_ID, SUBSCRIBE, \
                       CARGO_SYSTEM_SETTINGS_OOBE_COMPLETED_GET, \
                       NAVIGATE_TO_SCREEN, GET_ME_TILE_IMAGE_ID, \
-                      GET_TILES, SET_TILES, \
-                      UNSUBSCRIBE, SUBSCRIPTION_GET_DATA_LENGTH, \
-                      SUBSCRIPTION_GET_DATA, SUBSCRIPTION_SUBSCRIBE_ID, \
-                      SUBSCRIPTION_UNSUBSCRIBE_ID
+                      GET_TILES, SET_TILES, UNSUBSCRIBE
 from .socket import BandSocket
-from .sensors import Sensor, decode_sensor_reading
-from . import PUSH_SERVICE_PORT, layouts
+from .sensors import decode_sensor_reading
+from . import PUSH_SERVICE_PORT
 
 
 class DummyWrapper:
@@ -38,7 +35,7 @@ class DummyWrapper:
 class BandType(IntEnum):
     """
     MSFT Band device types
-    
+
     Cargo - MSFT Band 1
     Envoy - MSFT Band 2
     """
@@ -262,7 +259,9 @@ class BandDevice:
         data += struct.pack("<I", len(tiles))
         data += b''.join(tiles)
 
-        result = self.cargo.cargo_write_with_data(SET_TILES, data, struct.pack("<I", len(tiles)))
+        result = self.cargo.cargo_write_with_data(
+            SET_TILES, data, struct.pack("<I", len(tiles))
+        )
         self.cargo.cargo_write(START_STRIP_SYNC_END)
         return result
 
@@ -301,8 +300,10 @@ class BandDevice:
             order = struct.unpack("<I", tile_data[begin+16:begin+20])[0]
             theme_color = struct.unpack("<I", tile_data[begin+20:begin+24])[0]
             name_length = struct.unpack("<H", tile_data[begin+24:begin+26])[0]
-            settings_mask = struct.unpack("<H", tile_data[begin+26:begin+28])[0]
-            
+            settings_mask = struct.unpack(
+                "<H", tile_data[begin+26:begin+28]
+            )[0]
+
             # get tile name
             if name_length:
                 name = MsftBandParser.bytes_to_text(
@@ -328,4 +329,5 @@ class BandDevice:
 
     def send_notification(self, notification):
         self.cargo.cargo_write_with_data(
-            CARGO_NOTIFICATION, notification.serialize())
+            CARGO_NOTIFICATION, notification.serialize()
+        )

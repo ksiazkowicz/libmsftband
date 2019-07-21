@@ -21,7 +21,7 @@ class NotificationTypes(IntEnum):
     GenericUpdate = 101
     GenericClearTile = 102
     GenericClearPage = 103
-    
+
 
 class Notification:
     guid = None
@@ -40,7 +40,7 @@ class MessagingNotification(Notification):
         self.title = title[:20]
         self.text = text[:20]
         self.datetime = datetime.now()
-    
+
     def serialize(self):
         packet = super().serialize()
         packet += struct.pack("H", len(self.title) * 2)

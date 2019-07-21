@@ -1,6 +1,5 @@
 import struct
 import sys
-import math
 from PIL import Image
 from unidecode import unidecode
 from libband.filetimes import get_time, WINDOWS_TICKS_TO_POSIX_EPOCH
@@ -11,10 +10,12 @@ MAX_TIME = 2650467743999990000
 class MsftBandParser:
     @staticmethod
     def cuint32_to_hex(color):
-        return "#{0:02x}{1:02x}{2:02x}".format(color >> 16 & 255, 
-                                               color >> 8 & 255, 
-                                               color & 255)
-    
+        return "#{0:02x}{1:02x}{2:02x}".format(
+            color >> 16 & 255,
+            color >> 8 & 255,
+            color & 255
+        )
+
     @staticmethod
     def encode_color(alpha, r, g, b):
         return (alpha << 24 | r << 16 | g << 8 | b)
@@ -40,7 +41,7 @@ class MsftBandParser:
             if sys.version_info[0] == 3:
                 try:
                     return bytes(char, "latin-1")
-                except:
+                except Exception:
                     return bytes([char])
             else:
                 return char.encode("latin-1")
@@ -73,7 +74,7 @@ class MsftBandParser:
         Converts bgr565 image from Band to PIL Image object
         """
         return Image.frombytes('RGB', size, image, 'raw', 'BGR;16')
-    
+
     @staticmethod
     def image_to_bgr565(image):
         """
@@ -102,7 +103,7 @@ class MsftBandParser:
         if num == 0 or num2 == 0 or num3 > 15270:
             print('Invalid file format')
             return None, None, None
-        
+
         byte_array = bytearray(int(num3 / 2 + num3 % 2))
         num4 = 0
         num5 = icon[4] << 8 | icon[5]
@@ -123,7 +124,7 @@ class MsftBandParser:
                         byte_array[int(num4 / 2)] = b2 << 4
                     b3 += 1
                     num4 += 1
-        
+
         return num, num2, bytes(byte_array)
 
     @staticmethod
@@ -185,14 +186,13 @@ class MsftBandParser:
         rle_array[5] = num2 % 256
         return rle_array
 
-
     @staticmethod
     def alpha4_to_bgra32(image):
         bgra32_length = len(image) * 2 * 4
         bgra32_array = bytes([])
         position = 0
         num = 0
-        width = height = math.sqrt(bgra32_length / 4)
+        # width = height = math.sqrt(bgra32_length / 4)
         while position < bgra32_length:
             num2 = num % 2
             if num2 != 0:

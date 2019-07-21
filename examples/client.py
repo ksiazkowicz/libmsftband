@@ -36,4 +36,3 @@ class ExampleClient:
             self.device.sync()
             return True
         return False
-

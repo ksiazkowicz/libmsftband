@@ -51,7 +51,8 @@ class MusicService(App):
         if message:
             try:
                 button_id = struct.unpack("H", command[-2:])[0]
-            except:
+            except Exception as exc:
+                self.band.wrapper.send("Debug", [str(exc)])
                 # can't unpack button ID
                 return
             if CONTROLS_PAGE.bytes_le in command:
@@ -60,5 +61,4 @@ class MusicService(App):
             elif VOLUME_PAGE.bytes_le in command:
                 button = layouts.VolumeButtonsLayout.get_key(button_id)
                 message["command"] = button
-        
         return message

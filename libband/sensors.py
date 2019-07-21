@@ -1,6 +1,7 @@
 from enum import IntEnum
 import struct
 
+
 class Sensor(IntEnum):
     Unknown = -1
     Accelerometer128MS = 0
@@ -86,9 +87,9 @@ class BatteryGaugeSensor(SensorReading):
         super().decode_packet(packet)
         beginning = self.header_length
         self.filtered_voltage = struct.unpack(
-            "H", packet[beginning + 1 : beginning + 2])
+            "H", packet[beginning + 1:beginning + 2])
         self.battery_gauge_alerts = struct.unpack(
-            "H", packet[beginning + 2 : beginning + 4])
+            "H", packet[beginning + 2:beginning + 4])
         self.value = (packet[beginning + 1] / 10) * 10
         self.value = 100 if self.value > 100 else self.value
 
