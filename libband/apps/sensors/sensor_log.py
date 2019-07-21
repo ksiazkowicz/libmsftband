@@ -1,11 +1,11 @@
 import os
 import struct
 
+from libband.apps.app import App
 from libband.commands import (
     GET_CHUNK_COUNTS, GET_CHUNK_RANGE_DATA, GET_CHUNK_RANGE_METADATA,
     DELETE_CHUNK_RANGE, FLUSH_LOG
 )
-from .app import App
 
 
 class SensorLogService(App):

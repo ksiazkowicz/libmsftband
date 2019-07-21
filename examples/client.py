@@ -1,7 +1,7 @@
 from libband.device import BandDevice
 from libband.apps import (
     WeatherService, TimeService, PhoneService, MetricsService, ProfileService,
-    CalendarService, SensorLogService
+    CalendarService, SensorLogService, SensorStreamService
 )
 
 
@@ -25,7 +25,8 @@ class ExampleClient:
                 Service.__name__: Service(self.device)
                 for Service in (
                     TimeService, WeatherService, MetricsService, PhoneService,
-                    ProfileService, CalendarService, SensorLogService
+                    ProfileService, CalendarService, SensorLogService,
+                    SensorStreamService
                 )
             }
         self.device.services = self.services

@@ -8,6 +8,7 @@ from distutils.util import strtobool
 from dotenv import load_dotenv
 
 from examples import ExampleClient
+from libband.sensors import Sensor
 from libband.screens import BandScreens
 
 
@@ -59,6 +60,20 @@ def cli():
                 pdb.set_trace()
             elif re.match(r'^help$', command):
                 print(HELP_TEXT)
+            elif re.match(r'^subscribe .\d*$', command):
+                subscription = int(command.split(' ')[1])
+                app.services['SensorStreamService'].subscribe(subscription)
+                print(f'Subscribed to {Sensor(subscription).name}')
+            elif re.match(r'^unsubscribe .\d*$', command):
+                subscription = int(command.split(' ')[1])
+                app.services['SensorStreamService'].unsubscribe(subscription)
+                print(f'Unubscribed from {Sensor(subscription).name}')
+            elif re.match(r'^subscriptions$', command):
+                service = app.services['SensorStreamService']
+                print(', '.join([
+                    Sensor(subscription).name
+                    for subscription in service.subscriptions
+                ]))
             elif re.match(r'^exit$', command):
                 raise SystemExit
             else:

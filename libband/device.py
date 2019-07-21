@@ -186,26 +186,15 @@ class BandDevice:
                 self.wrapper.print(packet_type)
                 self.wrapper.print(binascii.hexlify(result))
 
-    def subscribe(self, subscription_type):
-        arguments = struct.pack("Bxxxx", subscription_type)
-        result, info = self.cargo.cargo_write(SUBSCRIBE, arguments)
-        return result
-
-    def unsubscribe(self, subscription_type):
-        arguments = struct.pack("B", subscription_type)
-        result, info = self.cargo.cargo_write(UNSUBSCRIBE, arguments)
-        return result
-
     def sync(self):
         for service in self.services.values():
-            self.wrapper.print("%s" % service, end='')
+            self.wrapper.print(f'{service}'.ljust(80), end='')
             try:
                 result = getattr(service, "sync")()
             except Exception as exc:
                 self.wrapper.print(exc)
                 result = False
-            self.wrapper.print("          [%s]" % ("OK" if result else "FAIL"))
-
+            self.wrapper.print("[%s]" % ("OK" if result else "FAIL"))
         self.wrapper.print("Sync finished")
 
     def clear_tile(self, guid):
