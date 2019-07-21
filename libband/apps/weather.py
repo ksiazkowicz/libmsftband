@@ -3,7 +3,7 @@ import uuid
 import requests
 import geocoder
 from datetime import datetime, timedelta
-from libband import layouts, OPENCAGE_KEY
+from libband import layouts, settings
 from libband.notifications import NotificationTypes, Notification
 from libband.tiles import WEATHER
 from .app import App
@@ -73,9 +73,11 @@ class WeatherService(App):
     def set_location(self, lat, lon):
         self.lat = lat
         self.lon = lon
-        place = geocoder.opencage([lat, lon],
-                                  key=OPENCAGE_KEY,
-                                  method='reverse')
+        place = geocoder.opencage(
+            [lat, lon],
+            key=settings.OPENCAGE_KEY,
+            method='reverse'
+        )
         self.place = "%s, %s" % (place.city, place.country)
 
     def sync(self):
