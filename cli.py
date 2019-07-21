@@ -60,14 +60,32 @@ def cli():
                 pdb.set_trace()
             elif re.match(r'^help$', command):
                 print(HELP_TEXT)
+            elif re.match(r'^info$', command):
+                print(
+                    f'Band Type: {app.device.band_type.name}\n'
+                    f'Application: {app.device.version.application}\n'
+                    f'Bootloader: {app.device.version.bootloader}\n'
+                    f'Updater: {app.device.version.updater}\n'
+                )
+            elif re.match(r'^api-version$', command):
+                print(app.device.get_api_version())
+            elif re.match(r'^whoami$', command):
+                print(app.device.get_running_firmware_app())
+            elif re.match(r'^check-sdk .\d* .\d*$', command):
+                args = command.split(' ')[1:]
+                app.device.check_firmware_sdk_bit(*args)
             elif re.match(r'^subscribe .\d*$', command):
+                service = app.services['SensorStreamService']
                 subscription = int(command.split(' ')[1])
-                app.services['SensorStreamService'].subscribe(subscription)
-                print(f'Subscribed to {Sensor(subscription).name}')
+                result = service.subscribe(subscription)
+                if result:
+                    print(f'Subscribed to {Sensor(subscription).name}')
             elif re.match(r'^unsubscribe .\d*$', command):
+                service = app.services['SensorStreamService']
                 subscription = int(command.split(' ')[1])
-                app.services['SensorStreamService'].unsubscribe(subscription)
-                print(f'Unubscribed from {Sensor(subscription).name}')
+                result = service.unsubscribe(subscription)
+                if result:
+                    print(f'Unubscribed from {Sensor(subscription).name}')
             elif re.match(r'^subscriptions$', command):
                 service = app.services['SensorStreamService']
                 print(', '.join([

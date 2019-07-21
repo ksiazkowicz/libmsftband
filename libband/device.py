@@ -7,14 +7,17 @@ import threading
 
 from .notifications import GenericClearTileNotification
 from .parser import MsftBandParser
-from .commands import SERIAL_NUMBER_REQUEST, CARGO_NOTIFICATION, \
-                      GET_TILES_NO_IMAGES, CORE_WHO_AM_I, \
-                      SET_THEME_COLOR, START_STRIP_SYNC_END, \
-                      START_STRIP_SYNC_START, READ_ME_TILE_IMAGE, \
-                      WRITE_ME_TILE_IMAGE_WITH_ID, SUBSCRIBE, \
-                      CARGO_SYSTEM_SETTINGS_OOBE_COMPLETED_GET, \
-                      NAVIGATE_TO_SCREEN, GET_ME_TILE_IMAGE_ID, \
-                      GET_TILES, SET_TILES, UNSUBSCRIBE
+from .commands import (
+    SERIAL_NUMBER_REQUEST, CARGO_NOTIFICATION,
+    GET_TILES_NO_IMAGES, CORE_WHO_AM_I, CORE_GET_API_VERSION,
+    SET_THEME_COLOR, START_STRIP_SYNC_END, CORE_SDK_CHECK,
+    START_STRIP_SYNC_START, READ_ME_TILE_IMAGE, CORE_GET_VERSION,
+    WRITE_ME_TILE_IMAGE_WITH_ID,
+    CARGO_SYSTEM_SETTINGS_OOBE_COMPLETED_GET,
+    NAVIGATE_TO_SCREEN, GET_ME_TILE_IMAGE_ID,
+    GET_TILES, SET_TILES,
+)
+from .versions import BandType, DeviceVersion, FirmwareVersion
 from .socket import BandSocket
 from .sensors import decode_sensor_reading
 from . import PUSH_SERVICE_PORT
@@ -32,16 +35,33 @@ class DummyWrapper:
         atexit.register(func)
 
 
-class BandType(IntEnum):
-    """
-    MSFT Band device types
+class FirmwareApp(IntEnum):
+    OneBL = 1
+    TwoUp = 2
+    App = 3
+    UpApp = 4
 
-    Cargo - MSFT Band 1
-    Envoy - MSFT Band 2
-    """
-    Unknown = 0
-    Cargo = 1
-    Envoy = 2
+
+class FirmwareSdkCheckPlatform(IntEnum):
+    WindowsPhone = 1
+    Windows = 2
+    Desktop = 3
+
+
+class PushServicePacketType(IntEnum):
+    WakeApp = 0
+    RemoteSubscription = 1
+    Sms = 100
+    DismissCall = 101
+    VoicePacketBegin = 200
+    VoicePacketData = 201
+    VoicePacketEnd = 202
+    VoicePacketCancel = 203
+    StrappEvent = 204
+    StrappSyncRequest = 205
+    CortanaContext = 206
+    Keyboard = 220
+    KeyboardSetContent = 222
 
 
 class BandDevice:
@@ -49,12 +69,12 @@ class BandDevice:
     cargo = None
     push = None
     tiles = None
-    band_type = BandType.Cargo  # TODO: actually detect this from Device
     band_language = None
     band_name = None
     serial_number = None
     push_thread = None
     services = {}
+    version: DeviceVersion
     wrapper = DummyWrapper()
 
     def __init__(self, address):
@@ -63,8 +83,17 @@ class BandDevice:
         self.cargo = BandSocket(self)
         self.wrapper.atexit(self.disconnect)
 
+    @property
+    def band_type(self):
+        if self.version:
+            return self.version.band_type
+        return BandType.Unknown
+
     def connect(self):
         self.cargo.connect()
+
+        # fetch device data
+        self.get_firmware_version()
 
         # start push thread
         self.push_thread = threading.Thread(target=self.listen_pushservice)
@@ -73,9 +102,6 @@ class BandDevice:
     def disconnect(self):
         self.push.disconnect()
         self.cargo.disconnect()
-
-    def who_am_i(self):
-        return self.cargo.cargo_read(CORE_WHO_AM_I, 1)
 
     def check_if_oobe_completed(self):
         result, data = self.cargo.cargo_read(
@@ -170,20 +196,19 @@ class BandDevice:
                 break
 
             packet_type = struct.unpack("H", result[0:2])[0]
-            self.wrapper.print(packet_type)
+            self.wrapper.print(PushServicePacketType(packet_type))
 
-            if packet_type == 1:
+            if packet_type == PushServicePacketType.RemoteSubscription:
                 sensor = decode_sensor_reading(result)
                 self.wrapper.print(sensor)
-            elif packet_type == 100:
+            elif packet_type == PushServicePacketType.Sms:
                 self.process_notification_callback(result)
-            elif packet_type == 101:
+            elif packet_type == PushServicePacketType.DismissCall:
                 self.process_notification_callback(result)
-            elif packet_type == 204:
+            elif packet_type == PushServicePacketType.StrappEvent:
                 self.wrapper.print(binascii.hexlify(result))
                 self.process_tile_callback(result)
             else:
-                self.wrapper.print(packet_type)
                 self.wrapper.print(binascii.hexlify(result))
 
     def sync(self):
@@ -320,3 +345,41 @@ class BandDevice:
         self.cargo.cargo_write_with_data(
             CARGO_NOTIFICATION, notification.serialize()
         )
+
+    def get_firmware_version(self):
+        result, info = self.cargo.cargo_read(CORE_GET_VERSION, 19*3)
+        info = b''.join(info)
+        self.version = DeviceVersion()
+
+        offset = 0
+        for i in range(0, 3):
+            fw_version = FirmwareVersion.deserialize(info[offset:offset+19])
+            if fw_version.app_name == '1BL':
+                self.version.bootloader = fw_version
+            elif fw_version.app_name == '2UP':
+                self.version.updater = fw_version
+            elif fw_version.app_name == 'App':
+                self.version.application = fw_version
+            offset += 19
+        return self.version
+
+    def get_api_version(self):
+        result, info = self.cargo.cargo_read(CORE_GET_API_VERSION, 4)
+        version = struct.unpack('I', info[0])[0]
+        return version
+
+    def get_running_firmware_app(self):
+        """
+        Returns what mode Band is running in.
+        - OneBL - Bootloader
+        - TwoUp - Updater
+        - App - Regular mode
+        - UpApp - Probably also Updater (?)
+        """
+        result, info = self.cargo.cargo_read(CORE_WHO_AM_I, 1)
+        app = struct.unpack('B', info[0])[0]
+        return FirmwareApp(app)
+
+    def check_firmware_sdk_bit(self, platform, reserved):
+        arguments = struct.pack('BBH', int(platform), int(reserved), 3)
+        self.cargo.cargo_write_with_data(CORE_SDK_CHECK, arguments)
