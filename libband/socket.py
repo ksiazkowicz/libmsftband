@@ -53,9 +53,6 @@ class BandSocket:
             except bluetooth.btcommon.BluetoothError as error:
                 self.device.wrapper.print("Connecting because %s" % error)
                 self.connect()
-            except OSError as error:
-                # assume user actually wanted to disconnect
-                pass
         return result
 
     def send(self, packet):

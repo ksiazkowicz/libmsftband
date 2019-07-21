@@ -66,12 +66,12 @@ class BandDevice:
         self.cargo = BandSocket(self)
         self.wrapper.atexit(self.disconnect)
 
+    def connect(self):
+        self.cargo.connect()
+
         # start push thread
         self.push_thread = threading.Thread(target=self.listen_pushservice)
         self.push_thread.start()
-
-    def connect(self):
-        self.cargo.connect()
 
     def disconnect(self):
         self.push.disconnect()
@@ -167,7 +167,11 @@ class BandDevice:
     def listen_pushservice(self):
         self.push.connect()
         while True:
-            result = self.push.receive()
+            try:
+                result = self.push.receive()
+            except OSError:
+                break
+
             packet_type = struct.unpack("H", result[0:2])[0]
             self.wrapper.print(packet_type)
 
@@ -200,7 +204,8 @@ class BandDevice:
             self.wrapper.print("%s" % service, end='')
             try:
                 result = getattr(service, "sync")()
-            except:
+            except Exception as exc:
+                self.wrapper.print(exc)
                 result = False
             self.wrapper.print("          [%s]" % ("OK" if result else "FAIL"))
 
