@@ -59,6 +59,6 @@ def test_bgra32_alpha4_and_back():
     alpha4 = MsftBandParser.bgra32_to_alpha4(pil_bgra32)
     assert alpha4 == decoded_icon
 
-    # let's encode the image to RLE format 
+    # let's encode the image to RLE format
     encoded_icon = MsftBandParser.encode_icon_rle(width, height, alpha4)
     assert rle_icon == encoded_icon

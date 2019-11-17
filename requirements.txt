@@ -5,3 +5,5 @@ geocoder==1.38.1
 pillow==5.4.1
 python-dotenv==0.10.3
 pytest==5.2.4
+pytest-cov==2.8.1
+flake8
