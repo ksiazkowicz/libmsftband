@@ -14,7 +14,8 @@ def lookup_packet(packet):
     command = binary_packet[command_part_start:command_part_start+2]
 
     data_stage_size = struct.unpack(
-        "<I", binary_packet[command_part_start+2:command_part_start+6])
+        "<I", binary_packet[command_part_start+2:command_part_start+6]
+    )[0]
 
     arguments = binary_packet[command_part_start+6:]
 
@@ -39,6 +40,5 @@ def make_command(facility, is_tx, index):
     """
     Given Facility, TX bit and index, spits out command encoded as ushort
     """
-    # make command
     command = facility.value << 8 | int(is_tx) << 7 | index
     return command

@@ -209,6 +209,7 @@ class MsftBandParser:
             position += 1
         return bgra32_array
 
+    @staticmethod
     def bgra32_to_alpha4(image):
         array_size = int((len(image)/4) / 2 + (len(image)/4) % 2)
         byte_array = bytearray(array_size)

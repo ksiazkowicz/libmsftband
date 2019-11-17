@@ -4,3 +4,4 @@ logs/
 /.env
 /.coverage
 /build
+/.pytest_cache
