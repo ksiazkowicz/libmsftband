@@ -1,0 +1,39 @@
+name: Python package
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version: [3.7]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python_version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python_version }}
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libbluetooth-dev
+        pip install -r requirements.txt
+    - name: Lint with flake8
+      run: |
+        flake8
+    - name: Test with pytest
+      run: |
+        pytest --cov --cov-report xml
+    - name: Uploading coverage
+      uses: codecov/codecov-action@v1
+      with:
+        file: ./build/coverage.xml # optional
+        flags: unittests # optional
+        name: codecov-umbrella # optional

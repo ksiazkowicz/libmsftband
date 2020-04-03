@@ -14,6 +14,9 @@ class MockBandSocket(BandSocket):
     _received_packets = []
     _expected_results = defaultdict(list)
 
+    def _make_socket(self):
+        return None
+
     def call(self, packet=None, results=[]):
         self._expected_results[packet].append(results)
 
