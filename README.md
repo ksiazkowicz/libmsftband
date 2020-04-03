@@ -1,11 +1,16 @@
 # libmsftband
+
+[![codecov](https://codecov.io/gh/ksiazkowicz/libmsftband/branch/master/graph/badge.svg)](https://codecov.io/gh/ksiazkowicz/libmsftband) ![Python package](https://github.com/ksiazkowicz/libmsftband/workflows/Python%20package/badge.svg) ![Upload Python Package](https://github.com/ksiazkowicz/libmsftband/workflows/Upload%20Python%20Package/badge.svg)
+
 This project aims to completely reverse engineer Microsoft Band protocol, giving new life to these cool devices. This repo contains a simple Python library, basic interface for it and docs describing the protocol.
 
 ## Installation
+
 You need to install some dependencies first:
 `pip install -r requirements.txt`
 
 ## Usage
+
 You can use provided example client to connect to your Band. Set `DEVICE_MAC_ADDRESS` environment variable to MAC address of your Band and run `cli.py`:
 
 ```
