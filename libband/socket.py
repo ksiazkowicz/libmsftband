@@ -15,7 +15,10 @@ class BandSocket:
     def __init__(self, device=None, port=CARGO_SERVICE_PORT):
         self.device = device
         self.port = port
-        self.socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+        self.socket = self._make_socket()
+
+    def _make_socket(self):
+        return bluetooth.BluetoothSocket(bluetooth.RFCOMM)
 
     def connect(self, timeout=TIMEOUT):
         self.reconnect_count = 0
@@ -23,7 +26,7 @@ class BandSocket:
         while True:
             try:
                 self.socket.close()
-                self.socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+                self.socket = self._make_socket()
                 self.socket.connect((self.device.address, self.port))
                 break
             except bluetooth.btcommon.BluetoothError as error:

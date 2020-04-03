@@ -137,9 +137,6 @@ class MsftBandParser:
         rle_array[2] = height >> 8
         rle_array[3] = height
 
-        # width = 10
-        # height = 10
-
         for i in range(0, height):
             b = 0
             num3 = 0
@@ -192,13 +189,11 @@ class MsftBandParser:
         bgra32_array = bytes([])
         position = 0
         num = 0
-        # width = height = math.sqrt(bgra32_length / 4)
         while position < bgra32_length:
             num2 = num % 2
             if num2 != 0:
                 if num2 == 1:
                     index = int(num / 2)
-                    # value = image[index] % 256
                     value = (image[index] % 16) * 255 / 15
                     bgra32_array += bytes([
                         int(value)
@@ -214,6 +209,7 @@ class MsftBandParser:
             position += 1
         return bgra32_array
 
+    @staticmethod
     def bgra32_to_alpha4(image):
         array_size = int((len(image)/4) / 2 + (len(image)/4) % 2)
         byte_array = bytearray(array_size)

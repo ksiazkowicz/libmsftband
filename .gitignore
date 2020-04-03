@@ -2,3 +2,6 @@ __pycache__/
 /.vscode
 logs/
 /.env
+/.coverage
+/build
+/.pytest_cache

@@ -1,6 +1,10 @@
-pybluez
+pybluez==0.23
 unidecode==1.0.23
 requests==2.21.0
 geocoder==1.38.1
 pillow==5.4.1
 python-dotenv==0.10.3
+pytest==5.2.4
+pytest-cov==2.8.1
+pytest-mock==1.11.2
+flake8

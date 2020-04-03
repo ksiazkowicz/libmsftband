@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from enum import IntEnum
 import struct
 
@@ -14,14 +15,15 @@ class BandType(IntEnum):
     Envoy = 2
 
 
+@dataclass
 class FirmwareVersion:
-    app_name = ''
-    pcb_id = 0
-    version_major = 0
-    version_minor = 0
-    build_number = 0
-    revision = 0
-    debug_build = 0
+    app_name: str = ''
+    pcb_id: int = 0
+    version_major: int = 0
+    version_minor: int = 0
+    build_number: int = 0
+    revision: int = 0
+    debug_build: int = 0
 
     @staticmethod
     def deserialize(packet):
@@ -40,10 +42,11 @@ class FirmwareVersion:
         )
 
 
+@dataclass
 class DeviceVersion:
-    bootloader = FirmwareVersion()
-    application = FirmwareVersion()
-    updater = FirmwareVersion()
+    bootloader: FirmwareVersion = FirmwareVersion()
+    application: FirmwareVersion = FirmwareVersion()
+    updater: FirmwareVersion = FirmwareVersion()
 
     @property
     def band_type(self):
